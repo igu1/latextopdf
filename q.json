@@ -1,0 +1,46 @@
+{
+  "qp_code": "TSET 5",
+  "qp_name": "\\textbf{\\Large The internal Semester Exam}\\\\\\\\Multi Variable Calculus - MAT3CJ201 (Credit:4)",
+  "qp_stream": "Your Stream",
+  "course_name": "Your Course Name",
+  "admission_year": "Your Admission Year",
+  "time": "70 Minutes",
+  "max_marks": "55",
+  "qp_parts": [
+    {
+      "part_name": "Section A",
+      "part_title": "Your Part Title",
+      "part_description": "[Answer All. Each Question Carries 5 Marks]",
+      "content": [
+        "1. Consider the function $f(\\mathbf{X}) = \\det(\\mathbf{X}),$ \\\\where $\\mathbf{X} =\\begin{pmatrix}x & y \\\\y & x\\end{pmatrix}.$ \\\\",
+        "2. Let $T(\\mathbf{v}) = \\begin{pmatrix}3 & -1 \\\\2 & 0 \\end{pmatrix}\\mathbf{v}.$ \\\\Find the image of the set \\\\\\\\$S = \\left\\{ \\begin{pmatrix}x \\\\ y\\end{pmatrix}\\in \\mathbb{R}^2 \\,\\middle|\\, x^2 + y^2 \\le 1 \\right\\}.$ \\\\\\\\",
+        "3. Evaluate $iint_R (x + y)\\, dA$ \\\\Where $R = \\{(x,y) \\mid 0 \\le x \\le 3,\\ 1 \\le y \\le 4\\}.$ \\\\",
+        "4. \\\\ $Given \\[A=\\begin{pmatrix}2 & 3 \\\\-1 & 4\\end{pmatrix},\\quadB=\\begin{pmatrix}1 & 5 \\\\0 & 2\\end{pmatrix},\\]compute $A+B$.$\\\\",
+        "5. Given \\\\$A=\\begin{pmatrix}1 & 2 & 3\\\\0 & -1 & 4\\\\2 & 1 & 0\\end{pmatrix},\\quadB=\\begin{pmatrix}2 & 0 & 1\\\\3 & 5 & -2\\\\1 & 4 & 3\\end{pmatrix},$ \\\\\\\\AND EVALUATE THE PICTURE\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{./Photo/Qpbank/QPBank-3156.jpeg}\\\\\\\\",
+        "6. Explain the figure below\\\\\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{./Photo/Qpbank/QPBank-3146.jpeg}\\\\\\\\",
+        "7. Insert \\\\$\\int x e^x\\,dx.$ \\\\and evaluate \\\\$\\int \\sin^3 x \\cos x\\,dx.$ \\\\Repeat \\\\$\\frac{d}{dx}(x^2\\sin x).$\\\\ $\\frac{d^2}{dx^2}(3x^4 - 2x^3 + x - 5).$ \\\\\\\\",
+        "8. Consider two lines in space: Line 1 passes through points A(1, 0, 1) and B(2, 2, 0). Line 2 is given by the parametric equations $x=3+t, y=1-t, z=2+2t$. Evaluate whether these lines intersect. If they do, find their point of intersection and the equation of the plane containing both lines. If they do not intersect, determine if they are parallel or skew, and calculate the shortest distance between them.",
+        "9. Given the region $R = \\left\\{ (x,y) \\in \\mathbb{R}^2 \\,\\middle|\\, \\begin{pmatrix} 0 \\\\ -1 \\end{pmatrix}\\le\\begin{pmatrix} x \\\\ y \\end{pmatrix}\\le\\begin{pmatrix} 2 \\\\ 3 \\end{pmatrix}\\right\\},$ \\\\and Evaluate $\\iint_R (x^2 + y)\\, dA.$ \\\\",
+        "10. Evaluate $\\iint_R (x^2 - y)\\, dA$ \\\\",
+        "11. Analyze the surface described by the equation $x^2 + y^2 - z^2 = 1$. Identify the type of quadric surface. Convert the equation into both cylindrical and spherical coordinates. Evaluate and describe the traces of this surface in the coordinate planes.",
+        "12. Evaluate the table and figure1\\\\\\\\ \\begin{tabular}{|c|c|}\\hline 1 & 2 \\\\ \\hline\n3 & 4 Start\\\\ \\\\ \\hline\\end{tabular} \\\\ also\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{./Photo/Qpbank/QPBank-3152.png}\\\\\\\\",
+        "13. Explain in detail about the table\\\\\\\\\\\\ \\begin{tabular}{|c|c|c|}\\hline 1 & 2 & 3 \\\\ \\hline\n4 & 5 & 6 \\\\ \\hline\\end{tabular} \\\\Also Explain the zero darwin effect",
+        "14. Evaluate \\\\$\\iint_R (x^2 - y^2)\\, dA$ \\\\\\\\",
+        "15. Evaluate the following\\\\\\begin{enumerate}\\item Physiotherapy\\item Smog in the eyes\\item P-Matrix\\\\\\\\\\end{enumerate}",
+        "16. Consider \\\\$f(\\mathbf{X}) = \\det(\\mathbf{X}),$ \\\\Where\\\\\\\\$\\mathbf{X} =\\begin{pmatrix}x & y \\\\y & x\\end{pmatrix}.$ \\\\\\\\"
+      ],
+      "footer": "Ceiling Marks: 45"
+    },
+    {
+      "part_name": "Section B",
+      "part_title": "Your Part Title",
+      "part_description": "Answer All Questions",
+      "content": [
+        "17. Matrix\\\\$\\begin{vmatrix}1 & 2 \\\\3 & 4\\end{vmatrix}$ \\\\\\\\",
+        "18. \\\\ $\\question Find the determinant of matrix $A$:\\[\\det(A) =\\begin{vmatrix}1 & 2 \\\\3 & 4\\end{vmatrix}\\]$\\\\",
+        "19. \\\\Evaluate the following matrix\\\\ $\\begin{matrix}1 & 2 \\\\3 & 4\\end{matrix}$\\\\"
+      ],
+      "footer": "Ceiling Marks: 10"
+    }
+  ]
+}
