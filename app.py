@@ -150,7 +150,7 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
 
 \begin{document}
 \begin{luacode*}
-    json = require('json')
+    json = require('dkjson')
     lfs = require('lfs')
     local jsonPath = lfs.currentdir() .. "/Reports/question.json"
     print(jsonPath)
