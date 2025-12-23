@@ -125,10 +125,27 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
 \setotherlanguage{malayalam}
 \setotherlanguage{arabic}
 
-\newfontfamily\arabicfont[Script=Arabic,Scale=1.3]{Lateef}
-\newfontfamily\devanagarifont[Script=Devanagari,Scale=1.3]{Mangal}
-\newfontfamily\malayalamfont[Script=Malayalam,Scale=1.3]{Rachana}
-\newfontfamily\hindifont[Script=Devanagari]{Mangal}
+\usepackage{fontspec}
+
+\newfontfamily\arabicfont[
+  Script=Arabic,
+  Scale=1.3
+]{Noto Naskh Arabic}
+
+\newfontfamily\devanagarifont[
+  Script=Devanagari,
+  Scale=1.3
+]{Noto Serif Devanagari}
+
+\newfontfamily\hindifont[
+  Script=Devanagari
+]{Noto Serif Devanagari}
+
+\newfontfamily\malayalamfont[
+  Script=Malayalam,
+  Scale=1.3
+]{Noto Serif Malayalam}
+
 
 
 \begin{document}
