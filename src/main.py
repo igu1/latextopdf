@@ -61,7 +61,7 @@ async def convert_question_paper(request: QuestionPaperRequest):
     
     try:
         question_data = request.model_dump()
-        pdf_bytes = compile_question_paper(question_data)
+        pdf_bytes = await compile_question_paper(question_data)
         
         filename = f"{request.qp_code}.pdf"
         logger.info(f"Successfully generated PDF: {filename}")

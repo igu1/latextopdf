@@ -7,6 +7,7 @@ import tempfile
 import pathlib
 import json
 import logging
+import asyncio
 from typing import Dict, Any
 
 from .image_processor import extract_and_download_urls, process_images
@@ -76,7 +77,7 @@ def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
         return pdf_bytes
 
 
-def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
+async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
     """
     Compile a question paper from structured data to PDF
     
@@ -102,12 +103,12 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         photo_dir.mkdir(parents=True)
         
         logger.info(f"Processing images for question paper: {qp_code}")
-        process_images(question_data.get('images', {}), photo_dir)
+        await process_images(question_data.get('images', {}), photo_dir)
         
         processed_data = question_data.copy()
         for part in processed_data.get('qp_parts', []):
             for i, content in enumerate(part.get('content', [])):
-                processed_content = extract_and_download_urls(content, photo_dir)
+                processed_content = await extract_and_download_urls(content, photo_dir)
                 part['content'][i] = processed_content
         
         logger.info(f"Writing JSON data for question paper: {qp_code}")
