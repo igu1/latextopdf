@@ -1,23 +1,67 @@
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+*$py.class
 *.so
-*.egg
-*.egg-info/
-dist/
+.Python
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# LaTeX
 *.pdf
 *.tex
 *.log
 *.aux
 *.out
-.git/
-.gitignore
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Project specific
+Photo/Qpbank/*
+!Photo/Qpbank/.gitkeep
+test_output.pdf
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
 *.md
+*.rst
+*.txt
 test.py
 main.py
 hardcore.tex
