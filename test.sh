@@ -1,6 +1,6 @@
 #!/bin/bash
 
-curl -X POST http://91.98.87.247:5000/convert \
+curl -X POST http://localhost:5000/convert \
   -H "Content-Type: application/json" \
   -d @q.json --output test_output.pdf 
 

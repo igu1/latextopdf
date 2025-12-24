@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import subprocess
 import tempfile
 import pathlib
@@ -10,6 +10,12 @@ import io
 import json
 import logging
 import uvicorn
+import shutil
+import os
+import re
+import base64
+import requests
+import urllib.parse
 
 app = FastAPI(title="LaTeX to PDF Converter", version="1.0.0")
 
@@ -48,6 +54,7 @@ class QuestionPaperRequest(BaseModel):
     time: str
     max_marks: str
     qp_parts: List[QuestionPart]
+    images: Optional[Dict[str, str]] = None
 
 
 def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
@@ -89,6 +96,39 @@ def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
         
         return pdf_file.read_bytes()
 
+def extract_and_download_urls(latex_content: str, photo_dir: pathlib.Path) -> str:
+    url_pattern = r'\\includegraphics\[width=[^\]]*\]\{([^}]+)\}'
+    
+    def replace_url(match):
+        original_path = match.group(1)
+        
+        if original_path.startswith('http://') or original_path.startswith('https://'):
+            try:
+                parsed_url = urllib.parse.urlparse(original_path)
+                filename = os.path.basename(parsed_url.path)
+                
+                if not filename:
+                    filename = f"downloaded_image_{hash(original_path)}.jpg"
+                
+                local_path = photo_dir / filename
+                
+                logger.info(f"Downloading image from URL: {original_path}")
+                response = requests.get(original_path, timeout=10)
+                response.raise_for_status()
+                local_path.write_bytes(response.content)
+                
+                width_spec = match.group(0).split("[")[1].split("]")[0]
+                
+                return f'\\includegraphics[{width_spec}]{{./Photo/Qpbank/{filename}}}'
+                
+            except Exception as e:
+                logger.warning(f"Failed to download {original_path}: {e}")
+                return match.group(0)
+        
+        return match.group(0)
+    
+    processed_content = re.sub(url_pattern, replace_url, latex_content)
+    return processed_content
 
 def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,8 +137,38 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         reports_dir = tmpdir / "Reports"
         reports_dir.mkdir()
         
+        photo_dir = tmpdir / "Photo" / "Qpbank"
+        photo_dir.mkdir(parents=True)
+        
+        images = question_data.get('images', {})
+        if images:
+            for img_name, img_data in images.items():
+                img_path = photo_dir / img_name
+                try:
+                    if img_data.startswith('http://') or img_data.startswith('https://'):
+                        logger.info(f"Downloading image from URL: {img_data}")
+                        response = requests.get(img_data, timeout=10)
+                        response.raise_for_status()
+                        img_path.write_bytes(response.content)
+                    elif img_data.startswith('data:image'):
+                        img_base64 = img_data.split(',', 1)[1]
+                        img_bytes = base64.b64decode(img_base64)
+                        img_path.write_bytes(img_bytes)
+                    elif os.path.isfile(img_data):
+                        shutil.copy(img_data, img_path)
+                    else:
+                        logger.warning(f"Image source not recognized for {img_name}: {img_data[:50]}...")
+                except Exception as e:
+                    logger.warning(f"Could not process image {img_name}: {e}")
+        
+        processed_data = question_data.copy()
+        for part in processed_data.get('qp_parts', []):
+            for i, content in enumerate(part.get('content', [])):
+                processed_content = extract_and_download_urls(content, photo_dir)
+                part['content'][i] = processed_content
+        
         json_file = reports_dir / "question.json"
-        json_file.write_text(json.dumps(question_data, ensure_ascii=False), encoding="utf-8")
+        json_file.write_text(json.dumps(processed_data, ensure_ascii=False), encoding="utf-8")
         
         latex_template = r'''\documentclass[11pt]{article}
 \usepackage[a4paper,margin=1.4cm]{geometry}
@@ -113,6 +183,9 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
 \usepackage{luapackageloader}
 \usepackage{multicol}
 \usepackage{graphicx}
+\graphicspath{{./Photo/Qpbank/}}
+\usepackage[draft=false]{graphicx}
+\setkeys{Gin}{keepaspectratio,width=0.3\textwidth,height=0.3\textheight}
 \usepackage{lastpage}
 \usepackage{array}
 \usepackage{tabularx}
