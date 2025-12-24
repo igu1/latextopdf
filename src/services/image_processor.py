@@ -25,6 +25,7 @@ def extract_and_download_urls(latex_content: str, photo_dir: pathlib.Path) -> st
     Returns:
         Processed LaTeX content with local image paths
     """
+    logger.info("Processing LaTeX content for image URLs")
     url_pattern = r'\\includegraphics\[width=[^\]]*\]\{([^}]+)\}'
     
     def replace_url(match):
@@ -56,6 +57,7 @@ def extract_and_download_urls(latex_content: str, photo_dir: pathlib.Path) -> st
         return match.group(0)
     
     processed_content = re.sub(url_pattern, replace_url, latex_content)
+    logger.info("Completed processing LaTeX content for image URLs")
     return processed_content
 
 
@@ -68,8 +70,10 @@ def process_images(images: dict, photo_dir: pathlib.Path) -> None:
         photo_dir: Directory to save processed images
     """
     if not images:
+        logger.info("No images to process")
         return
         
+    logger.info(f"Processing {len(images)} images")
     for img_name, img_data in images.items():
         img_path = photo_dir / img_name
         try:

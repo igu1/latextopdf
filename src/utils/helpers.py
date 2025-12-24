@@ -4,7 +4,7 @@ Helper utilities for the LaTeX to PDF converter
 
 import logging
 import io
-from typing import Any
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     """
     logging.basicConfig(level=level)
     logger.setLevel(level)
+    logger.info(f"Logging configured at level: {logging.getLevelName(level)}")
 
 
 def create_pdf_response(pdf_bytes: bytes, filename: str) -> StreamingResponse:
@@ -31,7 +32,7 @@ def create_pdf_response(pdf_bytes: bytes, filename: str) -> StreamingResponse:
     Returns:
         FastAPI StreamingResponse configured for PDF download
     """
-    from fastapi.responses import StreamingResponse
+    logger.info(f"Creating PDF response for file: {filename} ({len(pdf_bytes)} bytes)")
     
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
@@ -52,4 +53,13 @@ def validate_file_size(pdf_bytes: bytes, max_size_mb: int = 50) -> bool:
         True if file size is valid, False otherwise
     """
     max_size_bytes = max_size_mb * 1024 * 1024
-    return len(pdf_bytes) <= max_size_bytes
+    file_size_mb = len(pdf_bytes) / (1024 * 1024)
+    
+    is_valid = len(pdf_bytes) <= max_size_bytes
+    
+    if is_valid:
+        logger.info(f"File size validation passed: {file_size_mb:.2f} MB")
+    else:
+        logger.warning(f"File size validation failed: {file_size_mb:.2f} MB exceeds limit of {max_size_mb} MB")
+    
+    return is_valid

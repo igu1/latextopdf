@@ -30,14 +30,18 @@ def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
         ValueError: If engine is not supported
         RuntimeError: If compilation fails
     """
+    logger.info(f"Starting LaTeX compilation with engine: {engine}")
+    
     valid_engines = {"pdflatex", "lualatex", "xelatex"}
     if engine not in valid_engines:
+        logger.error(f"Unsupported LaTeX engine: {engine}")
         raise ValueError(f"Engine must be one of {valid_engines}")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
         tex_file = tmpdir / "document.tex"
         
+        logger.info(f"Writing LaTeX source to temporary file: {tex_file}")
         tex_file.write_text(latex_source, encoding="utf-8")
         
         cmd = [
@@ -64,9 +68,12 @@ def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
         
         pdf_file = tmpdir / "document.pdf"
         if not pdf_file.exists():
+            logger.error("PDF file was not generated after compilation")
             raise RuntimeError("PDF was not generated")
         
-        return pdf_file.read_bytes()
+        pdf_bytes = pdf_file.read_bytes()
+        logger.info(f"LaTeX compilation successful, generated PDF: {len(pdf_bytes)} bytes")
+        return pdf_bytes
 
 
 def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
@@ -82,6 +89,9 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
     Raises:
         RuntimeError: If compilation fails
     """
+    qp_code = question_data.get('qp_code', 'unknown')
+    logger.info(f"Starting question paper compilation for: {qp_code}")
+    
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
         
@@ -91,6 +101,7 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         photo_dir = tmpdir / "Photo" / "Qpbank"
         photo_dir.mkdir(parents=True)
         
+        logger.info(f"Processing images for question paper: {qp_code}")
         process_images(question_data.get('images', {}), photo_dir)
         
         processed_data = question_data.copy()
@@ -99,12 +110,15 @@ def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
                 processed_content = extract_and_download_urls(content, photo_dir)
                 part['content'][i] = processed_content
         
+        logger.info(f"Writing JSON data for question paper: {qp_code}")
         json_file = reports_dir / "question.json"
         json_file.write_text(json.dumps(processed_data, ensure_ascii=False), encoding="utf-8")
         
         latex_template = get_question_latex_template()
         tex_file = tmpdir / "question.tex"
         tex_file.write_text(latex_template, encoding="utf-8")
+        
+        logger.info(f"Starting LuaLaTeX compilation for question paper: {qp_code}")
         
         cmd = [
             "lualatex",

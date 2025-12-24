@@ -29,6 +29,7 @@ app.add_middleware(
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
+    logger.info("Root endpoint accessed")
     return {
         "message": "LaTeX to PDF Converter API",
         "endpoints": ["/convert", "/health"]
@@ -38,6 +39,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
 
 
@@ -55,13 +57,14 @@ async def convert_question_paper(request: QuestionPaperRequest):
     Raises:
         HTTPException: If compilation fails or times out
     """
+    logger.info(f"Received PDF conversion request for: {request.qp_code}")
+    
     try:
-        logger.info(f"Generating question paper PDF for: {request.qp_code}")
-        
         question_data = request.model_dump()
         pdf_bytes = compile_question_paper(question_data)
         
         filename = f"{request.qp_code}.pdf"
+        logger.info(f"Successfully generated PDF: {filename}")
         
         return create_pdf_response(pdf_bytes, filename)
     
