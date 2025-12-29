@@ -1,7 +1,0 @@
-services:
-  latex-pdf-service:
-    build: .
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./Photo/Qpbank:/app/Photo/Qpbank
