@@ -40,22 +40,22 @@ def get_question_latex_template() -> str:
 \newfontfamily\arabicfont[
   Script=Arabic,
   Scale=1.3
-]{Noto Naskh Arabic}
+]{Lateef}
 
 \newfontfamily\devanagarifont[
   Script=Devanagari,
-  Scale=1.3
-]{Noto Serif Devanagari}
+  Scale=1.2
+]{Lohit Devanagari}
 
 \newfontfamily\hindifont[
-  Script=Devanagari
-]{Noto Serif Devanagari}
+  Script=Devanagari,
+  Scale=1.2
+]{Lohit Devanagari}
 
 \newfontfamily\malayalamfont[
   Script=Malayalam,
-  Scale=1.3
-]{Noto Serif Malayalam}
-
+  Scale=1.2
+]{Rachana}
 
 
 \begin{document}
@@ -63,19 +63,38 @@ def get_question_latex_template() -> str:
     json = require('dkjson')
     lfs = require('lfs')
     local jsonPath = lfs.currentdir() .. "/Reports/question.json"
-    print(jsonPath)
-
+    
     function readAll(file)
-        local f = assert(io.open(file, "rb"))
-        io.input(f)
+        local f = io.open(file, "rb")
+        if not f then return nil end
         local content = f:read("*all")
         f:close()
         return content
     end
 
     local contents = readAll(jsonPath)
-    local data = json.decode(contents)
-    print(contents)
+    if not contents then
+        tex.print("Error: Could not read JSON data from " .. jsonPath)
+        return
+    end
+    
+    local data, pos, err = json.decode(contents, 1, nil)
+    if err then
+        tex.print("Error decoding JSON: " .. err)
+        return
+    end
+
+    -- Font settings from JSON if available
+    local fonts = data.fonts or {}
+    if fonts.arabic then
+        tex.print("\\newfontfamily\\arabicfont[Script=Arabic,Scale=" .. (fonts.arabic_scale or "1.3") .. "]{" .. fonts.arabic .. "}")
+    end
+    if fonts.hindi then
+        tex.print("\\newfontfamily\\hindifont[Script=Devanagari,Scale=" .. (fonts.hindi_scale or "1.2") .. "]{" .. fonts.hindi .. "}")
+    end
+    if fonts.malayalam then
+        tex.print("\\newfontfamily\\malayalamfont[Script=Malayalam,Scale=" .. (fonts.malayalam_scale or "1.2") .. "]{" .. fonts.malayalam .. "}")
+    end
 
     tex.print(data.qp_code .. "\\hfill  Name .............................")
     tex.print("\\begin{flushright}")

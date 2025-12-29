@@ -61,7 +61,6 @@ test_output.pdf
 # Documentation
 *.md
 *.rst
-*.txt
 test.py
 main.py
 hardcore.tex
