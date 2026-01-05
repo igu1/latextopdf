@@ -1,49 +1,53 @@
 {
-  "qp_code": "TSET 5",
-  "qp_name": "\\textbf{\\Large The internal Semester Exam}\\\\\\\\Multi Variable Calculus - MAT3CJ201 (Credit:4)",
+  "qp_code": "MTM ML 1001",
+  "qp_name": "\\textbf{\\Large IV Semester Internal Exam}\\\\\\textmalayalam{സാഹിത്യവും മാനവികതയും} - MAL4FV110(1) (Credit:3)",
   "qp_stream": "Your Stream",
   "course_name": "Your Course Name",
   "admission_year": "Your Admission Year",
-  "time": "70 Minutes",
-  "max_marks": "55",
+  "time": "2 Hours",
+  "max_marks": "50",
   "qp_parts": [
     {
       "part_name": "Section A",
       "part_title": "Your Part Title",
-      "part_description": "[Answer All. Each Question Carries 5 Marks]",
+      "part_description": "[Answer All. Each Question Carries 2 Marks]",
       "content": [
-        "1. Consider the function $f(\\mathbf{X}) = \\det(\\mathbf{X}),$ \\\\where $\\mathbf{X} =\\begin{pmatrix}x & y \\\\y & x\\end{pmatrix}.$ \\\\",
-        "2. Let $T(\\mathbf{v}) = \\begin{pmatrix}3 & -1 \\\\2 & 0 \\end{pmatrix}\\mathbf{v}.$ \\\\Find the image of the set \\\\\\\\$S = \\left\\{ \\begin{pmatrix}x \\\\ y\\end{pmatrix}\\in \\mathbb{R}^2 \\,\\middle|\\, x^2 + y^2 \\le 1 \\right\\}.$ \\\\\\\\",
-        "3. Evaluate $iint_R (x + y)\\, dA$ \\\\Where $R = \\{(x,y) \\mid 0 \\le x \\le 3,\\ 1 \\le y \\le 4\\}.$ \\\\",
-        "4. \\\\ $Given \\[A=\\begin{pmatrix}2 & 3 \\\\-1 & 4\\end{pmatrix},\\quadB=\\begin{pmatrix}1 & 5 \\\\0 & 2\\end{pmatrix},\\]compute $A+B$.$\\\\",
-        "5. Given \\\\$A=\\begin{pmatrix}1 & 2 & 3\\\\0 & -1 & 4\\\\2 & 1 & 0\\end{pmatrix},\\quadB=\\begin{pmatrix}2 & 0 & 1\\\\3 & 5 & -2\\\\1 & 4 & 3\\end{pmatrix},$ \\\\\\\\AND EVALUATE THE PICTURE\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{https://beta.onlinetcs.com/Photo/Qpbank/QPBank-3168.jpeg}\\\\\\\\",
-        "6. Explain the figure below\\\\\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{./Photo/Qpbank/QPBank-3146.jpeg}\\\\\\\\",
-        "7. Insert \\\\$\\int x e^x\\,dx.$ \\\\and evaluate \\\\$\\int \\sin^3 x \\cos x\\,dx.$ \\\\Repeat \\\\$\\frac{d}{dx}(x^2\\sin x).$\\\\ $\\frac{d^2}{dx^2}(3x^4 - 2x^3 + x - 5).$ \\\\\\\\",
-        "8. Consider two lines in space: Line 1 passes through points A(1, 0, 1) and B(2, 2, 0). Line 2 is given by the parametric equations $x=3+t, y=1-t, z=2+2t$. Evaluate whether these lines intersect. If they do, find their point of intersection and the equation of the plane containing both lines. If they do not intersect, determine if they are parallel or skew, and calculate the shortest distance between them.",
-        "9. Given the region $R = \\left\\{ (x,y) \\in \\mathbb{R}^2 \\,\\middle|\\, \\begin{pmatrix} 0 \\\\ -1 \\end{pmatrix}\\le\\begin{pmatrix} x \\\\ y \\end{pmatrix}\\le\\begin{pmatrix} 2 \\\\ 3 \\end{pmatrix}\\right\\},$ \\\\and Evaluate $\\iint_R (x^2 + y)\\, dA.$ \\\\",
-        "10. Evaluate $\\iint_R (x^2 - y)\\, dA$ \\\\",
-        "11. Analyze the surface described by the equation $x^2 + y^2 - z^2 = 1$. Identify the type of quadric surface. Convert the equation into both cylindrical and spherical coordinates. Evaluate and describe the traces of this surface in the coordinate planes.",
-        "12. Evaluate the table and figure1\\\\\\\\ \\begin{tabular}{|c|c|}\\hline 1 & 2 \\\\ \\hline\n3 & 4 Start\\\\ \\\\ \\hline\\end{tabular} \\\\ also\\\\\\\\ \\includegraphics[width=0.3\\textwidth]{https://beta.onlinetcs.com/Photo/Qpbank/QPBank-3168.jpeg}\\\\\\\\",
-        "13. Explain in detail about the table\\\\\\\\\\\\ \\begin{tabular}{|c|c|c|}\\hline 1 & 2 & 3 \\\\ \\hline\n4 & 5 & 6 \\\\ \\hline\\end{tabular} \\\\Also Explain the zero darwin effect",
-        "14. Evaluate \\\\$\\iint_R (x^2 - y^2)\\, dA$ \\\\\\\\",
-        "15. Evaluate the following\\\\\\begin{enumerate}\\item Physiotherapy\\item Smog in the eyes\\item P-Matrix\\\\\\\\\\end{enumerate}",
-        "16. Consider \\\\$f(\\mathbf{X}) = \\det(\\mathbf{X}),$ \\\\Where\\\\\\\\$\\mathbf{X} =\\begin{pmatrix}x & y \\\\y & x\\end{pmatrix}.$ \\\\\\\\"
+        "1. \\textmalayalam{ഈശ്വരന്} \\textmalayalam{പേരുകളില്ലെന്നും} \\textmalayalam{അദ്ദേഹം} \\textmalayalam{അരൂപിയാണെന്നും} \\textmalayalam{ഗാന്ധിജി} \\textmalayalam{കരുതാൻ} \\textmalayalam{കാരണമെന്ത്}?",
+        "2. \\textmalayalam{ഗാന്ധി} \\textmalayalam{സാഹിത്യസംഗ്രഹം}' \\textmalayalam{എന്ന} \\textmalayalam{പുസ്തകത്തിൻ്റെ} \\textmalayalam{സമ്പാദകൻ} \\textmalayalam{ആരാണ്}?",
+        "3. \\textmalayalam{ഗാന്ധിജിയെ} \\textmalayalam{സംബന്ധിച്ചിടത്തോളം} '\\textmalayalam{സത്യം}' \\textmalayalam{എന്നതിൽ} \\textmalayalam{വാക്കിലുള്ള} \\textmalayalam{സത്യനിഷ്ഠ} \\textmalayalam{കൂടാതെ} \\textmalayalam{മറ്റെന്താണ്} \\textmalayalam{ഉൾക്കൊള്ളുന്നത്}?",
+        "4. \\textmalayalam{സത്യം}' \\textmalayalam{എന്ന} \\textmalayalam{പദത്തിൻ്റെ} \\textmalayalam{ധാതുവും} \\textmalayalam{അതിൻ്റെ} \\textmalayalam{അർത്ഥവും} \\textmalayalam{എന്താണ്}?",
+        "5. \\textmalayalam{സച്ചിദാനന്ദത്തിലെ} '\\textmalayalam{ചിത്}', '\\textmalayalam{ആനന്ദം}' \\textmalayalam{എന്നീ} \\textmalayalam{പദങ്ങൾ} \\textmalayalam{എന്താണ്} \\textmalayalam{സൂചിപ്പിക്കുന്നത്}?",
+        "6. \\textmalayalam{നാസ്തികതയെ} \\textmalayalam{ഗാന്ധിജി} \\textmalayalam{എങ്ങനെയാണ്} \\textmalayalam{നോക്കിക്കണ്ടത്}?",
+        "7. \\textmalayalam{ഈശ്വരൻ} \\textmalayalam{സത്യമാണ്}' \\textmalayalam{എന്ന} \\textmalayalam{പ്രസ്താവനയേക്കാൾ} '\\textmalayalam{സത്യം} \\textmalayalam{ഈശ്വരനാണ്}' \\textmalayalam{എന്ന്} \\textmalayalam{പറയാൻ} \\textmalayalam{ഗാന്ധിജിയെ} \\textmalayalam{പ്രേരിപ്പിച്ച} \\textmalayalam{പ്രധാന} \\textmalayalam{കാരണം} \\textmalayalam{എന്താണ്}?",
+        "8. \\textmalayalam{സത്യാന്വേഷകർ} \\textmalayalam{അനുഷ്ഠിക്കേണ്ട} \\textmalayalam{ഏതെങ്കിലും} \\textmalayalam{രണ്ട്} \\textmalayalam{വ്രതങ്ങൾ} \\textmalayalam{ഏതാണ്}?",
+        "9. \\textmalayalam{കേവലസത്യത്തെ} \\textmalayalam{സാക്ഷാത്കരിക്കാൻ} \\textmalayalam{കഴിയാത്തിടത്തോളം} \\textmalayalam{കാലം} \\textmalayalam{നാം} \\textmalayalam{എന്തിനെയാണ്} \\textmalayalam{മുറുകെപ്പിടിക്കേണ്ടത്}?",
+        "10. \\textmalayalam{ഗാന്ധിജിയെ} \\textmalayalam{സംബന്ധിച്ചിടത്തോളം} \\textmalayalam{പരമമായ} \\textmalayalam{തത്വം} \\textmalayalam{ഏതാണ്}?\\\\"
       ],
-      "footer": "Ceiling Marks: 45"
+      "footer": "Ceiling Marks: 15"
     },
     {
       "part_name": "Section B",
       "part_title": "Your Part Title",
-      "part_description": "Answer All Questions",
+      "part_description": "[Answer All. Each Question Carries 5 Marks]",
       "content": [
-        "17. Matrix\\\\$\\begin{vmatrix}1 & 2 \\\\3 & 4\\end{vmatrix}$ \\\\\\\\",
-        "18. \\\\ $\\question Find the determinant of matrix $A$:\\[\\det(A) =\\begin{vmatrix}1 & 2 \\\\3 & 4\\end{vmatrix}\\]$\\\\",
-        "19. \\\\Evaluate the following matrix\\\\ $\\begin{matrix}1 & 2 \\\\3 & 4\\end{matrix}$\\\\"
+        "11. \\textmalayalam{ഗാന്ധിജിയുടെ} \\textmalayalam{വീക്ഷണത്തിൽ} \\textmalayalam{കേവലസത്യവും} \\textmalayalam{ആപേക്ഷികസത്യവും} \\textmalayalam{തമ്മിലുള്ള} \\textmalayalam{വ്യത്യാസം} \\textmalayalam{എന്താണ്}?",
+        "12. \\textmalayalam{സത്യത്തിലേക്കുള്ള} \\textmalayalam{മാർഗം} '\\textmalayalam{ഇടുങ്ങിയതും} \\textmalayalam{വാൾത്തലപോലെ} \\textmalayalam{മൂർച്ചയുള്ളതുമാണ്}' \\textmalayalam{എന്ന്} \\textmalayalam{ഗാന്ധിജി} \\textmalayalam{പറയാൻ} \\textmalayalam{കാരണം} \\textmalayalam{എന്ത്}?",
+        "13. \\textmalayalam{ഈശ്വരനെ} \\textmalayalam{തേടിയുള്ള} \\textmalayalam{അന്വേഷണം} \\textmalayalam{ഹിമാലയൻ} \\textmalayalam{പര്യടനങ്ങളേക്കാൾ} \\textmalayalam{മഹത്തരവും} \\textmalayalam{രസകരവുമാകുന്നത്} \\textmalayalam{എന്തുകൊണ്ടാണ്}?\\\\",
+        "14. \\textmalayalam{സത്യത്തെ} \\textmalayalam{ഈശ്വരനായിക്കരുതി} \\textmalayalam{ആരാധിക്കാൻ} \\textmalayalam{വിഷമമുള്ളവർക്ക്} \\textmalayalam{ഗാന്ധിജി} \\textmalayalam{നൽകുന്ന} \\textmalayalam{ഉപദേശം} \\textmalayalam{എന്താണ്}?",
+        "15. \\textmalayalam{ഈശ്വരനിൽ} \\textmalayalam{വിശ്വാസിക്കുന്നവർ} \\textmalayalam{അദ്ദേഹത്തിൻ്റെ} \\textmalayalam{പേരിൽ} \\textmalayalam{കഠോരകൃത്യങ്ങൾ} \\textmalayalam{ചെയ്യുന്നതിനെ} \\textmalayalam{ഗാന്ധിജി} \\textmalayalam{എങ്ങനെയാണ്} \\textmalayalam{കണ്ടത്}?",
+        "16. \\textmalayalam{ഈശ്വരൻ} \\textmalayalam{സ്നേഹമാണ്} \\textmalayalam{എന്ന്} \\textmalayalam{പറയുന്നതിനേക്കാൾ}, \\textmalayalam{താൻ} '\\textmalayalam{സത്യമാണ്} \\textmalayalam{ഈശ്വരൻ}' \\textmalayalam{എന്ന്} \\textmalayalam{പറയാൻ} \\textmalayalam{ഇഷ്ടപ്പെടുന്നതിൻ്റെ} \\textmalayalam{യുക്തി} \\textmalayalam{എന്തായിരുന്നു}?\\\\"
       ],
-      "footer": "Ceiling Marks: 10"
+      "footer": "Ceiling Marks: 25"
+    },
+    {
+      "part_name": "Section C",
+      "part_title": "Your Part Title",
+      "part_description": "[Answer Any One. Each Question Carries 10 Marks]",
+      "content": [
+        "17. \\textmalayalam{നാസ്തികരുമായി} \\textmalayalam{ബന്ധപ്പെട്ട്} \\textmalayalam{ഗാന്ധിജി} '\\textmalayalam{സത്യം} \\textmalayalam{ഈശ്വരനാണ്}' \\textmalayalam{എന്ന} \\textmalayalam{നിർവചനത്തിനു} \\textmalayalam{നൽകുന്ന} \\textmalayalam{പ്രാധാന്യം} \\textmalayalam{എത്രത്തോളമാണ്}? \\textmalayalam{സ്നേഹം} (love) \\textmalayalam{എന്ന} \\textmalayalam{പദത്തെ} \\textmalayalam{സത്യവുമായി} \\textmalayalam{താരതമ്യം} \\textmalayalam{ചെയ്തുകൊണ്ട്} \\textmalayalam{ഈ} \\textmalayalam{ദാർശനിക} \\textmalayalam{നിലപാട്} \\textmalayalam{എങ്ങനെയാണ്} \\textmalayalam{ലോകത്തെ} \\textmalayalam{ഉൾക്കൊള്ളുന്നത്} \\textmalayalam{എന്ന്} \\textmalayalam{വിലയിരുത്തുക}.",
+        "18. \\textmalayalam{ഗാന്ധിജിയുടെ} \\textmalayalam{സത്യാന്വേഷണ} \\textmalayalam{മാർഗ്ഗത്തെക്കുറിച്ചുള്ള} \\textmalayalam{കാഴ്ചപ്പാടുകൾ} \\textmalayalam{വിശദമാക്കുക}. \\textmalayalam{കേവലസത്യത്തെ} \\textmalayalam{സാക്ഷാത്കരിക്കാൻ} \\textmalayalam{ആവശ്യമായ} \\textmalayalam{വ്രതങ്ങളും} \\textmalayalam{ആധ്യാത്മിക} \\textmalayalam{പരീക്ഷണങ്ങൾക്കുള്ള} \\textmalayalam{വ്യവസ്ഥകളും} \\textmalayalam{വിവരിക്കുക}."
+      ],
+      "footer": "Marks: 10"
     }
-  ],
-  "images": {
-    "QPBank-3146.jpeg": "/home/ez/tmp/meshlogic_complex_equation/Photo/Qpbank/QPBank-3146.jpeg"
-  }
+  ]
 }

@@ -2,8 +2,9 @@
 Pydantic models and data schemas for the LaTeX to PDF converter
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 
 class LatexRequest(BaseModel):
@@ -29,3 +30,11 @@ class QuestionPaperRequest(BaseModel):
     max_marks: str
     qp_parts: List[QuestionPart]
     images: Optional[Dict[str, str]] = None
+    password: Optional[bool] = False
+    
+    @field_validator('password', mode='before')
+    @classmethod
+    def validate_password(cls, v):
+        if v is True:
+            return True
+        return False

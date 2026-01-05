@@ -9,11 +9,87 @@ import json
 import logging
 import asyncio
 from typing import Dict, Any
+from datetime import datetime
 
 from .image_processor import extract_and_download_urls, process_images
 from ..templates.question_template import get_question_latex_template
 
 logger = logging.getLogger(__name__)
+
+
+def encrypt_pdf_with_password(pdf_bytes: bytes, password: str) -> bytes:
+    """
+    Encrypt PDF with password using pdftk or qpdf
+    
+    Args:
+        pdf_bytes: Original PDF bytes
+        password: Password to encrypt with
+        
+    Returns:
+        Encrypted PDF bytes
+        
+    Raises:
+        RuntimeError: If encryption fails
+    """
+    logger.info("Encrypting PDF with password")
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = pathlib.Path(tmpdir)
+        input_pdf = tmpdir / "input.pdf"
+        output_pdf = tmpdir / "output.pdf"
+        
+        input_pdf.write_bytes(pdf_bytes)
+        
+        # Try qpdf first (more commonly available)
+        try:
+            cmd = [
+                "qpdf",
+                "--encrypt", password, password, "128",
+                "--print=full", "--modify=full", "--extract=n",
+                str(input_pdf), str(output_pdf)
+            ]
+            
+            proc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=30
+            )
+            
+            if proc.returncode == 0 and output_pdf.exists():
+                logger.info("PDF encrypted successfully using qpdf")
+                return output_pdf.read_bytes()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logger.warning("qpdf not available, trying pdftk")
+        
+        # Try pdftk as fallback
+        try:
+            cmd = [
+                "pdftk",
+                str(input_pdf),
+                "output", str(output_pdf),
+                "user_pw", password,
+                "owner_pw", password
+            ]
+            
+            proc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=30
+            )
+            
+            if proc.returncode == 0 and output_pdf.exists():
+                logger.info("PDF encrypted successfully using pdftk")
+                return output_pdf.read_bytes()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logger.warning("pdftk not available")
+        
+        # If neither tool is available, return unencrypted PDF
+        logger.warning("No PDF encryption tool available, returning unencrypted PDF")
+        return pdf_bytes
 
 
 def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
@@ -91,7 +167,8 @@ async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         RuntimeError: If compilation fails
     """
     qp_code = question_data.get('qp_code', 'unknown')
-    logger.info(f"Starting question paper compilation for: {qp_code}")
+    password_enabled = question_data.get('password', False)
+    logger.info(f"Starting question paper compilation for: {qp_code}, password protection: {password_enabled}")
     
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir)
@@ -151,6 +228,12 @@ async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
             error_msg = f"PDF was generated but is empty (0 bytes)\nSTDOUT:\n{proc.stdout}\n\nSTDERR:\n{proc.stderr}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
+        
+        # Apply password protection if requested
+        if password_enabled:
+            current_date = datetime.now().strftime("%Y%m%d")
+            logger.info(f"Applying password protection with date-based password: {current_date}")
+            pdf_bytes = encrypt_pdf_with_password(pdf_bytes, current_date)
         
         logger.info(f"PDF generated successfully: {len(pdf_bytes)} bytes")
         return pdf_bytes

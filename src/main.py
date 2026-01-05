@@ -64,6 +64,9 @@ async def convert_question_paper(request: QuestionPaperRequest):
         pdf_bytes = await compile_question_paper(question_data)
         
         filename = f"{request.qp_code}.pdf"
+        if request.password:
+            filename = f"{request.qp_code}_protected.pdf"
+        
         logger.info(f"Successfully generated PDF: {filename}")
         
         return create_pdf_response(pdf_bytes, filename)
