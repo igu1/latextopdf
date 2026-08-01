@@ -84,6 +84,16 @@ def get_question_latex_template() -> str:
         return
     end
 
+    -- Feed multi-line strings to TeX as separate input lines: a raw U+000A
+    -- character has no glyph in any font and renders as a box in the PDF
+    local function print_multiline(s)
+        local lines = {}
+        for line in (s .. "\n"):gmatch("(.-)\n") do
+            lines[#lines + 1] = (line:gsub("\r$", ""))
+        end
+        tex.print(lines)
+    end
+
     -- Font settings from JSON if available
     local fonts = data.fonts or {}
     if fonts.arabic then
@@ -118,9 +128,9 @@ def get_question_latex_template() -> str:
         tex.print("\\end{center}")
         for j, part in ipairs(row.content) do
             if string.find(part, "\\begin{tabular}") then
-                tex.print(part)
+                print_multiline(part)
             else
-                tex.print(part .. " \\\\")
+                print_multiline(part .. " \\\\")
                 tex.print(" \\\\")
             end
         end
