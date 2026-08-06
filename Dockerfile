@@ -35,6 +35,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /app/Photo/Qpbank
 
-EXPOSE 5008
+EXPOSE 5000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5008"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]
