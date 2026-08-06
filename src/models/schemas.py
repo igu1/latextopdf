@@ -2,9 +2,8 @@
 Pydantic models and data schemas for the LaTeX to PDF converter
 """
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
-from datetime import datetime
 
 
 class LatexRequest(BaseModel):
@@ -30,11 +29,13 @@ class QuestionPaperRequest(BaseModel):
     max_marks: str
     qp_parts: List[QuestionPart]
     images: Optional[Dict[str, str]] = None
-    password: Optional[bool] = False
-    
-    @field_validator('password', mode='before')
-    @classmethod
-    def validate_password(cls, v):
-        if v is True:
-            return True
-        return False
+    # Paper-level layout direction, sent by the portal's "RTL Paper" checkbox.
+    # True  -> the entire question part is typeset right-to-left.
+    # False -> left-to-right (content already wrapped in \begin{Arabic} by the
+    #          caller still renders RTL, so this is a safe default).
+    rtl: Optional[bool] = False
+
+    # NOTE: this service no longer password-protects PDFs. It always returns an
+    # unprotected file so the portal's "View" actions can open it; the portal
+    # applies the password at download time. A `password` field sent by an
+    # older caller is simply ignored.

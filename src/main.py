@@ -64,8 +64,6 @@ async def convert_question_paper(request: QuestionPaperRequest):
         pdf_bytes = await compile_question_paper(question_data)
         
         filename = f"{request.qp_code}.pdf"
-        if request.password:
-            filename = f"{request.qp_code}_protected.pdf"
         
         logger.info(f"Successfully generated PDF: {filename}")
         
@@ -84,4 +82,4 @@ async def convert_question_paper(request: QuestionPaperRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=5008)

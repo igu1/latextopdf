@@ -13,6 +13,7 @@ RUN apt-get -o Acquire::Retries=5 update \
     fonts-sil-lateef \
     fonts-indic \
     fonts-smc-rachana \
+    fonts-noto-core \
     fontconfig \
     lua-dkjson \
     qpdf \
@@ -34,6 +35,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /app/Photo/Qpbank
 
-EXPOSE 5000
+EXPOSE 5008
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5008"]
