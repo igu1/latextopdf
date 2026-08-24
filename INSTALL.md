@@ -54,17 +54,63 @@ python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 ```
 
+## Configuration
+
+All runtime settings live in a `.env` file in the project root. Start from the
+template:
+
+```bash
+cp .env.example .env
+```
+
+| Variable    | Default   | Meaning |
+|-------------|-----------|---------|
+| `PORT`      | `5000`    | Port the service listens on (inside the container, under Docker). |
+| `HOST`      | `0.0.0.0` | Interface to bind. Use `127.0.0.1` to keep a local run off the network. |
+| `HOST_PORT` | `5055`    | Docker only: the port published on your machine. |
+
+To change the port, edit that one line - `PORT=8000` - and restart. Nothing else
+needs touching: `src/config.py` feeds the local run, and docker compose feeds the
+same values into the port mapping, the build arg, and the container environment.
+
+A real environment variable always beats the file, so a one-off run needs no edit:
+
+```bash
+PORT=8000 ./venv/bin/python -m src.main
+```
+
+`.env` is gitignored (it is per-machine); `.env.example` is committed as the
+reference.
+
 ## Running the Project
 
 ### Start the Server
 ```bash
-./venv/bin/uvicorn app:app --host 0.0.0.0 --port 5000
+./venv/bin/python -m src.main
 ```
 
-### Test Conversion
-You can test the API using `curl`:
+Or through the uvicorn CLI, if you want `--reload`:
 ```bash
-curl -X POST http://127.0.0.1:5000/convert \
+set -a && . ./.env && set +a
+./venv/bin/uvicorn src.main:app --host "$HOST" --port "$PORT" --reload
+```
+
+### With Docker
+```bash
+docker compose up --build
+```
+The service is then reachable on `HOST_PORT` (5055 by default), not `PORT`.
+
+### Test Conversion
+```bash
+./test.sh
+```
+`test.sh` takes the port from `.env`, preferring `HOST_PORT` (Docker) over `PORT`
+(local run). Override it for a one-off: `API_PORT=8000 ./test.sh`.
+
+Or by hand:
+```bash
+curl -X POST http://127.0.0.1:$PORT/convert \
      -H "Content-Type: application/json" \
      -d @q.json \
      --output test_output.pdf

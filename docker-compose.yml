@@ -1,7 +1,25 @@
 services:
   latex-pdf-service:
-    build: .
+    build:
+      context: .
+      args:
+        # Baked into the image as ENV PORT, so `docker run` without compose
+        # still listens on the configured port.
+        PORT: ${PORT:-5000}
     ports:
-      - "5000:5000"
+      # HOST_PORT defaults to 5055, not 5000: the portal's own ASP.NET process
+      # listens on 127.0.0.1:5000, and Windows prefers the more specific address
+      # over Docker's 0.0.0.0:5000 - so every request to localhost:5000 reached
+      # Kestrel and was answered with a redirect to :5001, never touching this
+      # service. Both bound successfully and neither reported a conflict.
+      #
+      # Both sides come from .env in this directory; the :-defaults keep the
+      # stack working on a fresh clone that has no .env yet.
+      - "${HOST_PORT:-5055}:${PORT:-5000}"
+    environment:
+      # Passed through explicitly rather than via env_file, so a missing .env is
+      # not a hard error.
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-5000}
     volumes:
       - ./Photo/Qpbank:/app/Photo/Qpbank

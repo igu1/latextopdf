@@ -26,6 +26,117 @@ def get_question_latex_template() -> str:
 \usepackage{multirow}
 \usepackage{amsmath}
 
+% ---------------------------------------------------------------------------
+% Features the BROWSER preview can already draw, but which this preamble did
+% not load - so a teacher could put one in a question, watch it render on
+% screen, print the paper, and the student would get a blank space. No error is
+% raised anywhere along that path, which makes it the worst way round to fail.
+%
+% Measured in a browser against the same MathJax + TikzJax the portal loads:
+% amssymb, mhchem and tikz-cd all preview; pgfplots does not preview but is the
+% feature most often wanted for maths and physics graphs.
+%
+% \IfFileExists rather than a bare \usepackage, deliberately. The image installs
+% a MINIMAL TeX Live (texlive-latex-recommended / -extra / -pictures, not
+% texlive-full), so whether a given .sty is present depends on the image - and a
+% \usepackage for a missing one does NOT fail cleanly: it blocks waiting to
+% fetch the package and the batch-mode build hangs until it times out, taking
+% every paper with it rather than just the question that used the feature.
+% Guarded, a missing package costs only that one feature.
+%
+% Each line reports itself with \typeout so the guard can never quietly hide a
+% package that still needs installing. LuaLaTeX's output is captured and only
+% logged when a compile FAILS, so on a healthy build these markers are thrown
+% away - read them by compiling the preamble directly instead:
+%
+%   docker compose exec latex-pdf-service sh -c 'cd /tmp && python3 -c "
+%   import sys; sys.path.insert(0,\"/app/src\")
+%   from templates.question_template import get_question_latex_template as t
+%   open(\"p.tex\",\"w\").write(t().split(r\"\begin{document}\")[0]
+%                              + r\"\begin{document}x\end{document}\")" \
+%   && lualatex -interaction=nonstopmode p.tex | grep QPPKG'
+%
+% Verified in the image built from this repository (all seven load):
+%   amssymb / mhchem / tikz-cd / pgfplots / siunitx / circuitikz / chemfig
+%
+% Loading a package here only fixes the PRINTED paper. The browser preview runs
+% TikzJax, whose package set is fixed inside a prebuilt WebAssembly dump, and
+% MathJax, which has an mhchem extension but no siunitx - so pgfplots, siunitx,
+% circuitikz and chemfig render on paper but cannot be previewed on screen.
+% latex-capabilities.ts in the portal must therefore WARN about those, not
+% block the save.
+% ---------------------------------------------------------------------------
+\IfFileExists{amssymb.sty}{%
+  \usepackage{amssymb}%
+  \typeout{QPPKG: amssymb loaded}%
+}{\typeout{QPPKG: amssymb MISSING}}
+
+\IfFileExists{mhchem.sty}{%
+  \usepackage[version=4]{mhchem}%
+  \typeout{QPPKG: mhchem loaded}%
+}{\typeout{QPPKG: mhchem MISSING}}
+
+\IfFileExists{tikz-cd.sty}{%
+  \usepackage{tikz-cd}%
+  \typeout{QPPKG: tikz-cd loaded}%
+}{\typeout{QPPKG: tikz-cd MISSING}}
+
+\IfFileExists{pgfplots.sty}{%
+  \usepackage{pgfplots}%
+  \pgfplotsset{compat=1.18}%
+  \typeout{QPPKG: pgfplots loaded}%
+}{\typeout{QPPKG: pgfplots MISSING}}
+
+% The three below were already present in the image but never loaded, so a
+% question using them compiled with "Undefined control sequence" / "Environment
+% undefined" and - because nonstopmode keeps going and the compiler only WARNS
+% on a non-zero exit (see latex_compiler.py) - the service still answered 200
+% with a PDF in which that question was simply blank. Loading them costs no
+% measurable compile time (2-3s, unchanged) and does not disturb plain tikz,
+% pgfplots or mhchem, all three re-checked after adding these.
+\IfFileExists{siunitx.sty}{%
+  \usepackage{siunitx}%
+  \typeout{QPPKG: siunitx loaded}%
+}{\typeout{QPPKG: siunitx MISSING}}
+
+\IfFileExists{circuitikz.sty}{%
+  \usepackage{circuitikz}%
+  \typeout{QPPKG: circuitikz loaded}%
+}{\typeout{QPPKG: circuitikz MISSING}}
+
+\IfFileExists{chemfig.sty}{%
+  \usepackage{chemfig}%
+  \typeout{QPPKG: chemfig loaded}%
+}{\typeout{QPPKG: chemfig MISSING}}
+
+% TikZ libraries. Part of pgf itself, so no \IfFileExists guard is needed - a
+% missing one errors immediately instead of blocking the way \usepackage does.
+%
+% This list is not a wish list, it is a repair. The browser preview runs
+% TikzJax, whose prebuilt dump loads all of these already, so a teacher drawing
+% a hexagon or a marked angle sees it render on screen. The PDF loaded only
+% arrows.meta, so the same question compiled to "I do not know the key
+% '/tikz/regular polygon'" and - because nonstopmode continues and the compiler
+% only warns on a non-zero exit - the paper printed with that question blank.
+% Measured against the shipped preamble before this change, real snippets for
+% shapes.geometric, patterns, intersections, decorations.markings, angles,
+% positioning, fit, backgrounds and 3d ALL failed; only arrows.meta, calc,
+% matrix, plotmarks and decorations.pathmorphing worked, and those four only
+% because pgfplots happens to pull them in.
+%
+% Keep in step with the preview: the set below is what tikzjax preloads plus
+% what question papers actually use.
+\usetikzlibrary{
+  arrows.meta, calc, positioning, fit, matrix, chains,
+  shapes.geometric, shapes.misc, shapes.symbols,
+  patterns, patterns.meta,
+  intersections, through, angles, quotes,
+  decorations.markings, decorations.pathmorphing,
+  decorations.pathreplacing, decorations.text,
+  backgrounds, plotmarks, trees, 3d, fadings, calendar
+}
+
+
 % babel with the full Unicode bidirectional algorithm (bidi=basic, LuaLaTeX).
 % This replaces polyglossia, whose LuaLaTeX RTL support laid out digit and
 % Latin runs inside Arabic text in reverse order (1948 -> 8491, UNESCO ->
