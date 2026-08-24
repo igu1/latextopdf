@@ -56,6 +56,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /app/Photo/Qpbank
 
-EXPOSE 5000
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]
+# No EXPOSE and no port here: the port lives only in src/main.py, which
+# `python -m src.main` reads. docker-compose.yml publishes it.
+CMD ["python", "-m", "src.main"]

@@ -56,44 +56,13 @@ python3 -m venv venv
 
 ## Configuration
 
-All runtime settings live in a `.env` file in the project root. Start from the
-template:
+The port is defined once, as `PORT` at the top of `src/main.py`. The Dockerfile
+starts the app with `python -m src.main`, so the container follows it; wsgi.py
+and test.sh read it too. The one thing that cannot read a Python constant is
+docker-compose.yml's port mapping, so change that line alongside it.
 
-```bash
-cp .env.example .env
-```
-
-| Variable | Default | Meaning |
-|----------|---------|---------|
-| `PORT`   | `5055`  | The port the service runs on. |
-
-That is the whole file. `PORT` is used on both sides of the Docker port mapping,
-so the number you set is the number you connect to - no separate host/container
-port to keep in step.
-
-To change it, edit the one line and restart:
-
-```
-PORT=8000
-```
-
-Nothing else needs touching: `src/config.py` feeds the local run, and docker
-compose feeds the same value into the port mapping, the build arg, and the
-container environment. Under Docker no rebuild is needed - the runtime value
-overrides the one baked into the image.
-
-Pick a port that is free on the machine, since it is bound on the host too.
-5055 is the default rather than 5000 because the portal's ASP.NET process
-already owns 127.0.0.1:5000 on Windows.
-
-A real environment variable always beats the file, so a one-off run needs no edit:
-
-```bash
-PORT=8000 ./venv/bin/python -m src.main
-```
-
-`.env` is gitignored (it is per-machine); `.env.example` is committed as the
-reference.
+5013 rather than 5000 because the portal's ASP.NET process already owns
+127.0.0.1:5000 on Windows.
 
 ## Running the Project
 
@@ -104,8 +73,7 @@ reference.
 
 Or through the uvicorn CLI, if you want `--reload`:
 ```bash
-set -a && . ./.env && set +a
-./venv/bin/uvicorn src.main:app --host 0.0.0.0 --port "$PORT" --reload
+./venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 5013 --reload  # --reload only: normally use python -m src.main
 ```
 
 ### With Docker
@@ -117,12 +85,9 @@ docker compose up --build
 ```bash
 ./test.sh
 ```
-`test.sh` takes the port from `.env`. Override it for a one-off:
-`PORT=8000 ./test.sh`.
-
 Or by hand:
 ```bash
-curl -X POST http://127.0.0.1:5055/convert \
+curl -X POST http://127.0.0.1:5013/convert \
      -H "Content-Type: application/json" \
      -d @q.json \
      --output test_output.pdf

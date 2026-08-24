@@ -16,6 +16,11 @@ from .services.figure_renderer import (
     FigureError, render_figure_png, render_figure_svg)
 from .utils.helpers import setup_logging, create_pdf_response
 
+# The one place the port is defined. The Dockerfile starts the app with
+# `python -m src.main`, so the container listens on whatever is set here;
+# only docker-compose.yml's port mapping has to be changed alongside it.
+PORT = 5013
+
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -143,4 +148,4 @@ async def render_figure(request: FigureRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

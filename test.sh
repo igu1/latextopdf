@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Port comes from .env; override for a one-off with PORT=8000 ./test.sh
-# The override is saved first because sourcing .env would otherwise clobber it.
-_port_override="$PORT"
-[ -f .env ] && set -a && . ./.env && set +a
-PORT="${_port_override:-${PORT:-5055}}"
+# Port read straight out of src/main.py, so it never drifts from the app.
+PORT=$(sed -n 's/^PORT = \([0-9]\+\).*/\1/p' src/main.py)
 
 echo "POSTing q.json to http://localhost:${PORT}/convert"
 
