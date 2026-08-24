@@ -2,8 +2,8 @@
 Runtime configuration, read once from the environment (and from .env if present).
 
 Every entry point - `python -m src.main`, wsgi.py, the uvicorn CLI in the
-Dockerfile - takes its host and port from here, so changing the port is a
-one-line edit in .env and never a hunt through five files.
+Dockerfile - takes its port from here, so changing it is a one-line edit in .env
+and never a hunt through five files.
 """
 
 import os
@@ -15,11 +15,11 @@ from dotenv import load_dotenv
 # keep in the image and still overridable per deployment.
 load_dotenv(override=False)
 
-# 0.0.0.0 rather than 127.0.0.1: inside a container the port has to be bound on
-# all interfaces or Docker's published port reaches nothing.
-HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", "5000"))
+# One number for both sides of the Docker port mapping, so the port you set is
+# the port you connect to. 5055 rather than 5000 because the portal's ASP.NET
+# process already owns 127.0.0.1:5000 on Windows.
+PORT = int(os.getenv("PORT", "5055"))
 
-# Only read by docker-compose.yml (host side of the port mapping); listed here
-# so the full set of knobs is visible in one place.
-HOST_PORT = int(os.getenv("HOST_PORT", str(PORT)))
+# Not configurable: inside a container the port has to be bound on all
+# interfaces or Docker's published port reaches nothing.
+HOST = "0.0.0.0"
