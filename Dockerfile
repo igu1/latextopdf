@@ -56,17 +56,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /app/Photo/Qpbank
 
-# The port the service runs on. Overridable at build time
-# (--build-arg PORT=...) and at run time (-e PORT=... / .env via compose),
-# because EXPOSE and CMD below both read it rather than hardcoding a number.
-ARG PORT=5055
-ENV PORT=${PORT}
+EXPOSE 5000
 
-EXPOSE ${PORT}
-
-# Shell form (sh -c) rather than the exec array: an array CMD is passed straight
-# to execve and would hand uvicorn the literal string "$PORT".
-#
-# --host is fixed at 0.0.0.0: inside a container the port has to be bound on all
-# interfaces or Docker's published port reaches nothing.
-CMD ["sh", "-c", "exec uvicorn src.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]

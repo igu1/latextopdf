@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field
 
-from .config import HOST, PORT
 from .models.schemas import QuestionPaperRequest
 from .services.latex_compiler import compile_question_paper
 from .services.figure_renderer import (
@@ -144,4 +143,4 @@ async def render_figure(request: FigureRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=HOST, port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
