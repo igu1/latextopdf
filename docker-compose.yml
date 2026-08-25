@@ -1,6 +1,7 @@
 services:
   latex-pdf-service:
     build: .
+    restart: unless-stopped
     ports:
       - "5013:5013"
     volumes:
