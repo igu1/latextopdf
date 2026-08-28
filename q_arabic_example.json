@@ -1,0 +1,38 @@
+{
+  "qp_code": "ARA5CJ301",
+  "qp_name": "\\textbf{\\Large Fifth Sem Examination}\\\\\\textnormal{ARABIC SYNTAX AND MORPHOLOGY 3} - ARA5CJ301 ((Credit:4))",
+  "qp_stream": "Your Stream",
+  "course_name": "Your Course Name",
+  "admission_year": "Your Admission Year",
+  "time": "90 Minutes",
+  "max_marks": "40",
+  "qp_parts": [
+    {
+      "part_name": "Section A",
+      "part_title": "Your Part Title",
+      "part_description": "[Answer All. Each Question Carries \\_\\_\\_3 Marks]",
+      "content": [
+        "\\begin{Arabic}\n\\begin{enumerate}[label=\\arabic*., itemsep=3mm]\n\\item \\textarabic{ماهي} \\textarabic{الأسماء} \\textarabic{الإشارة؟}\n\\item \\textarabic{أكتب} \\textarabic{ثلاثة} \\textarabic{من} \\textarabic{أسماء} \\textarabic{الموصولة} \\textarabic{مع} \\textarabic{إستعمال} \\textarabic{في} \\textarabic{جملة} \\textarabic{مفيدة؟}\n\\item \\textarabic{عرف} \\textarabic{الضمائر؟}\n\\item \\textarabic{ما} \\textarabic{هي} \\textarabic{ادوات} \\textarabic{الإستفهام؟}\n\\item \\textarabic{ترجم} \\textarabic{إلى} \\textarabic{اللغة} \\textarabic{العربية}:\\\\ \\textenglish{Honesty is the best policy.}\n\\end{enumerate}\n\\end{Arabic}"
+      ],
+      "footer": "Ceiling Marks: 12"
+    },
+    {
+      "part_name": "Section B",
+      "part_title": "Your Part Title",
+      "part_description": "[Answer Any 3, Each Question Carries \\_6\\_\\_ Marks]",
+      "content": [
+        "\\begin{Arabic}\n\\begin{enumerate}[label=\\arabic*., itemsep=3mm, resume]\n\\item \\textarabic{كمل} \\textarabic{الجمل} \\textarabic{الأتية} \\textarabic{بوضع} \\textarabic{ضمير} \\textarabic{منفصل} \\textarabic{مناسب؟} \\textarabic{ـــــــ} \\textarabic{عاملة} \\textarabic{في} \\textarabic{هذه} \\textarabic{الشركة} \\textarabic{ـــــــ} \\textarabic{مسافران} \\textarabic{إلى} \\textarabic{دبي} \\textarabic{ــــــــ} \\textarabic{أحب} \\textarabic{وطني} \\textarabic{ـــــــ} \\textarabic{نحن} \\textarabic{مسؤلون} \\textarabic{عن} \\textarabic{حماية} \\textarabic{الطبيعة}\n\\item \\textarabic{بين} \\textarabic{المبنيي؟}\n\\item \\textarabic{عرف} \\textarabic{إسم} \\textarabic{الموصولة؟}\n\\item \\textarabic{بين} \\textarabic{ادوات} \\textarabic{الإستفهام} \\textarabic{واستعملها} \\textarabic{في} \\textarabic{الجملة؟}\n\\end{enumerate}\n\\end{Arabic}"
+      ],
+      "footer": "Ceiling Marks: 18"
+    },
+    {
+      "part_name": "Section C",
+      "part_title": "Your Part Title",
+      "part_description": "[Answer Any One. Each Question Carries \\_10\\_\\_ Marks]",
+      "content": [
+        "\\begin{Arabic}\n\\begin{enumerate}[label=\\arabic*., itemsep=3mm, resume]\n\\item \\textarabic{بين} \\textarabic{أسماء} \\textarabic{الإشارة؟}\n\\item \\textarabic{بين} \\textarabic{الضمائر} \\textarabic{المتصلة؟}\n\\end{enumerate}\n\\end{Arabic}"
+      ],
+      "footer": "Marks: 10"
+    }
+  ]
+}

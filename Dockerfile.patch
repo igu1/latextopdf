@@ -1,0 +1,28 @@
+# Offline/incremental build.
+#
+# Use this when Docker Hub is unreachable ("failed to resolve source metadata
+# for docker.io/library/python:3.12-slim"). It starts from the image you have
+# already built instead of pulling the base image again, so it needs no network
+# at all - it only copies the updated application source in.
+#
+#   docker build -f Dockerfile.patch -t latextopdf-latex-pdf-service:latest .
+#   docker compose up -d          # (compose will then use the rebuilt image)
+#
+# Use the normal Dockerfile again once the registry is reachable, since only
+# that one can add new OS packages (e.g. the Syriac font).
+
+FROM latextopdf-latex-pdf-service:latest
+
+WORKDIR /app
+
+# Dependencies are already installed in the base image; refresh them only if
+# requirements.txt changed (harmless and fast when it has not).
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+RUN mkdir -p /app/Photo/Qpbank
+
+# No EXPOSE and no port here: the port lives only in src/main.py, which
+# `python -m src.main` reads. docker-compose.yml publishes it.
+CMD ["python", "-m", "src.main"]
