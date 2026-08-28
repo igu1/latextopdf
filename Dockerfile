@@ -39,6 +39,26 @@ RUN apt-get -o Acquire::Retries=5 update \
     # and sidesteps the version problem entirely.
     dvisvgm \
     mupdf-tools \
+    # The subject drawing packages the preamble loads for diagrams (geometry,
+    # graph theory, Venn diagrams, 3D, Feynman diagrams, physics notation,
+    # chemistry formulas, MO diagrams, trees, process diagrams) all come from
+    # the texlive-* collections already listed above - verified with kpsewhich
+    # inside the built image rather than assumed. These two do not:
+    #
+    # texlive-pstricks is pst-optic: ray diagrams through lenses and mirrors,
+    # the one thing in an optics question that is painful to draw by hand in
+    # TikZ. PSTricks is normally unusable with a PDF engine, but under LuaLaTeX
+    # it draws directly - checked, a full converging-lens diagram - so no dvips
+    # detour and no shell escape is needed.
+    #
+    # asymptote is a drawing language for figures that would be unreadable as a
+    # list of TikZ coordinates. It is the expensive one: ~90MB to download and
+    # ~300MB installed, most of it ImageMagick and OpenGL libraries it depends
+    # on, against ~600MB for all of TeX Live here. Kept because a \begin{asy}
+    # figure without the asy program is not a clear error - LaTeX includes a
+    # graphic that was never drawn and the question prints blank.
+    texlive-pstricks \
+    asymptote \
     && rm -rf /var/lib/apt/lists/*
 
 # Let LuaTeX's require() find the Debian-packaged dkjson (no luarocks needed)

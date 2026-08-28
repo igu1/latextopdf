@@ -22,9 +22,11 @@ import pathlib
 import re
 import subprocess
 import tempfile
+import time
 from typing import Tuple
 
 from ..templates.question_template import get_question_latex_template
+from .asymptote import run_asymptote
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +65,17 @@ FONT_LINES = re.compile(
 # Something that actually draws. Asked for a figure and given a paragraph, the
 # honest answer is to say so - typesetting the paragraph and calling it a
 # picture leaves the teacher to work out why their diagram became a sentence.
+#
+# Every environment the preamble's drawing packages provide has to appear here,
+# or the figure is refused before it is ever compiled: pspicture is pst-optic's
+# picture (ray diagrams), asy is Asymptote's, modiagram is a molecular orbital
+# diagram, feynman is tikz-feynman's inner environment - and tkz-euclide,
+# tkz-graph and tikz-3dplot all draw inside an ordinary tikzpicture, so they
+# need nothing of their own.
 DRAWS_SOMETHING = re.compile(
-    r"\\begin\{(tikzpicture|circuitikz|tikzcd|forest|venndiagram\w*|smartdiagram"
-    r"|axis|tikzcd\*)\}|\\chemfig\b|\\schemestart\b|\\smartdiagram\b")
+    r"\\begin\{(tikzpicture|circuitikz|tikzcd\*?|forest|venndiagram\w*"
+    r"|smartdiagram|axis|pspicture\*?|asy|modiagram|MOdiagram|feynman)\}"
+    r"|\\chemfig\b|\\schemestart\b|\\smartdiagram\b|\\feynmandiagram\b")
 
 
 def _extract_figure(source: str) -> str:
@@ -133,7 +143,7 @@ def _compile(latex: str) -> Tuple[str, bytes]:
         raise FigureError(
             "No figure was found in that code. Paste the picture itself - the "
             "\\begin{tikzpicture} ... \\end{tikzpicture} part, or a "
-            "circuitikz, tikzcd or \\chemfig figure."
+            "circuitikz, pspicture, forest, asy, tikzcd or \\chemfig figure."
         )
 
     forbidden = FORBIDDEN.search(source)
@@ -165,18 +175,43 @@ def _compile(latex: str) -> Tuple[str, bytes]:
         tmpdir = pathlib.Path(tmp)
         (tmpdir / "figure.tex").write_text(document, encoding="utf-8")
 
-        try:
-            proc = subprocess.run(
-                ["lualatex", "-interaction=nonstopmode", "-no-shell-escape",
-                 "figure.tex"],
-                cwd=tmpdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, timeout=COMPILE_TIMEOUT_S,
-            )
-        except subprocess.TimeoutExpired:
-            raise FigureError(
-                "The figure took too long to draw. A very large plot or a "
-                "domain with thousands of samples is the usual cause."
-            )
+        # One budget for the whole compile rather than one per pass. An
+        # Asymptote figure runs lualatex, then asy, then lualatex again, and
+        # three independent ceilings would let one figure hold the request open
+        # for well past the 90s the portal waits before giving up on it.
+        deadline = time.monotonic() + COMPILE_TIMEOUT_S
+
+        def left() -> float:
+            return max(1.0, deadline - time.monotonic())
+
+        def latex_pass() -> subprocess.CompletedProcess:
+            try:
+                return subprocess.run(
+                    ["lualatex", "-interaction=nonstopmode", "-no-shell-escape",
+                     "figure.tex"],
+                    cwd=tmpdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    text=True, timeout=left(),
+                )
+            except subprocess.TimeoutExpired:
+                raise FigureError(
+                    "The figure took too long to draw. A very large plot or a "
+                    "domain with thousands of samples is the usual cause."
+                )
+
+        proc = latex_pass()
+
+        # \begin{asy} is not drawn by LaTeX at all - the pass above only wrote
+        # the code out as figure-N.asy. asy turns each of those into a PDF and a
+        # second pass includes them. Every other kind of figure is already
+        # finished here: there are no .asy files to find, and asy is not run.
+        asy = run_asymptote(tmpdir, timeout=left())
+        if asy.figures:
+            # Reported rather than left to the blank-figure check below, because
+            # asy's own message names the line in the teacher's code.
+            if asy.errors:
+                raise FigureError(
+                    f"The Asymptote figure could not be drawn: {asy.errors[0]}")
+            proc = latex_pass()
 
         pdf = tmpdir / "figure.pdf"
         log_text = ""

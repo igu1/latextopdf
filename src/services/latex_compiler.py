@@ -10,6 +10,7 @@ import logging
 import asyncio
 from typing import Dict, Any
 
+from .asymptote import run_asymptote
 from .image_processor import extract_and_download_urls, process_images
 from ..templates.question_template import get_question_latex_template
 
@@ -136,7 +137,20 @@ async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
                 text=True,
                 timeout=60
             )
-            
+
+            # Between the two passes, because that is the only place it works:
+            # the first pass writes each \begin{asy} figure out as question-N.asy
+            # without drawing it, and the second pass includes the PDFs made
+            # here. A paper with no Asymptote figure in it finds no files and
+            # runs nothing. An error is logged rather than raised - one figure
+            # that will not draw must not cost the whole paper, and it is the
+            # same figure the teacher already previewed through /render-figure.
+            if i == 0:
+                asy = run_asymptote(tmpdir)
+                for message in asy.errors:
+                    logger.error("Asymptote figure failed in %s: %s",
+                                 qp_code, message)
+
             if i == 1 and proc.returncode != 0:
                 logger.warning(f"LuaLaTeX returned non-zero exit code: {proc.returncode}")
         

@@ -58,13 +58,17 @@ def get_question_latex_template() -> str:
 %
 % Verified in the image built from this repository (all seven load):
 %   amssymb / mhchem / tikz-cd / pgfplots / siunitx / circuitikz / chemfig
+% and, in the subject block below, all fourteen of tkz-euclide / tkz-graph /
+% venndiagram / tikz-3dplot / tikz-feynman / pst-optic / physics / chemformula /
+% chemmacros / modiagram / forest / smartdiagram / asymptote / svg.
 %
-% Loading a package here only fixes the PRINTED paper. The browser preview runs
-% TikzJax, whose package set is fixed inside a prebuilt WebAssembly dump, and
-% MathJax, which has an mhchem extension but no siunitx - so pgfplots, siunitx,
-% circuitikz and chemfig render on paper but cannot be previewed on screen.
-% latex-capabilities.ts in the portal must therefore WARN about those, not
-% block the save.
+% Loading a package here fixes the printed paper and - since /render-figure
+% compiles a single figure against this same preamble - the on-screen preview of
+% a DIAGRAM as well. What it still does not reach is maths and text inside a
+% question, which the browser draws itself with MathJax (mhchem extension, no
+% siunitx) and TikzJax (a fixed WebAssembly dump). So siunitx in running text
+% has no preview of its own, and latex-capabilities.ts in the portal must WARN
+% about that rather than block the save.
 % ---------------------------------------------------------------------------
 \IfFileExists{amssymb.sty}{%
   \usepackage{amssymb}%
@@ -108,6 +112,161 @@ def get_question_latex_template() -> str:
   \usepackage{chemfig}%
   \typeout{QPPKG: chemfig loaded}%
 }{\typeout{QPPKG: chemfig MISSING}}
+
+% ---------------------------------------------------------------------------
+% SUBJECT DRAWING PACKAGES.
+%
+% Same \IfFileExists guard and QPPKG marker as above, for the same reason: the
+% image installs a MINIMAL TeX Live, and a bare \usepackage for a .sty it does
+% not have does not fail cleanly - it blocks looking for the package until the
+% batch run times out, which loses every paper in the queue rather than the one
+% question that used the feature.
+%
+% These are as much for /render-figure as for the printed paper: that endpoint
+% compiles the figure against THIS preamble, so a lens diagram, a Feynman
+% diagram, an MO diagram or a Venn diagram is now shown to the teacher exactly
+% as it will print - none of them can be drawn by the browser's own TeX engine.
+%
+% Every line below was verified in the image built from this repository's
+% Dockerfile by compiling a real figure and checking the SVG for drawn content,
+% not by trusting a zero exit code (nonstopmode returns one either way).
+% ---------------------------------------------------------------------------
+
+% Euclidean geometry: \tkzDefPoint, \tkzDrawCircle, \tkzMarkAngle. Inside an
+% ordinary tikzpicture, so nothing else has to change to use it.
+\IfFileExists{tkz-euclide.sty}{%
+  \usepackage{tkz-euclide}%
+  \typeout{QPPKG: tkz-euclide loaded}%
+}{\typeout{QPPKG: tkz-euclide MISSING}}
+
+% Graph theory: \Vertex, \Edge, \SetGraphUnit - vertices and edges by name
+% instead of by coordinate.
+\IfFileExists{tkz-graph.sty}{%
+  \usepackage{tkz-graph}%
+  \typeout{QPPKG: tkz-graph loaded}%
+}{\typeout{QPPKG: tkz-graph MISSING}}
+
+% Set theory: venndiagram2sets / venndiagram3sets with \fillANotB and friends.
+\IfFileExists{venndiagram.sty}{%
+  \usepackage{venndiagram}%
+  \typeout{QPPKG: venndiagram loaded}%
+}{\typeout{QPPKG: venndiagram MISSING}}
+
+% 3D coordinates for solid geometry and crystal structures: \tdplotsetmaincoords
+% and the (r,theta,phi) coordinate system.
+\IfFileExists{tikz-3dplot.sty}{%
+  \usepackage{tikz-3dplot}%
+  \typeout{QPPKG: tikz-3dplot loaded}%
+}{\typeout{QPPKG: tikz-3dplot MISSING}}
+
+% Feynman diagrams. compat is passed explicitly because tikz-feynman warns and
+% falls back to its 1.0 syntax without it. It lays diagrams out with pgf's
+% graphdrawing library, which exists only under LuaTeX - which is the engine
+% used here, so \feynmandiagram works without coordinates being given by hand.
+\IfFileExists{tikz-feynman.sty}{%
+  \usepackage[compat=1.1.0]{tikz-feynman}%
+  \typeout{QPPKG: tikz-feynman loaded}%
+}{\typeout{QPPKG: tikz-feynman MISSING}}
+
+% Optics: \lens, \mirror, ray tracing through a converging lens - the standard
+% ray diagram, drawn to scale from the focal length rather than by eye.
+%
+% pst-optic is PSTricks, which is normally the one family of graphics packages
+% that cannot be used with a PDF-producing engine: it emits PostScript specials
+% and needs a dvips detour (auto-pst-pdf, shell escape) under pdflatex. Under
+% LuaLaTeX it draws directly - measured here, a full converging-lens diagram
+% with rays and labelled foci, 26 paths in the SVG - so no detour and no shell
+% escape is involved. Its pictures are \begin{pspicture}, not tikzpicture.
+\IfFileExists{pst-optic.sty}{%
+  \usepackage{pst-optic}%
+  \typeout{QPPKG: pst-optic loaded}%
+}{\typeout{QPPKG: pst-optic MISSING}}
+
+% Physics notation: \dv, \pdv, \grad, \div, \curl, \abs, \norm, \ket, \bra.
+%
+% physics also defines \qty - and so does siunitx v3, for something completely
+% different: siunitx's is a number with a unit, physics' is an auto-sized
+% bracket. Whichever loads second wins, in silence. With physics winning,
+% \qty{9.8}{\meter\per\second\squared} - which printed correctly before this
+% package was added, because siunitx has been loaded here all along - becomes
+% "Undefined control sequence \meter" in the middle of a paper, and nonstopmode
+% prints that question blank rather than stopping.
+%
+% So siunitx keeps \qty, by the resolution siunitx itself prints in the log.
+% Nothing that used to compile changes meaning, and physics' bracket is still
+% reachable under its unambiguous names: \pqty (), \bqty [], \Bqty {}, \vqty ||.
+% \ifdefined guards it because siunitx is itself behind an \IfFileExists.
+\IfFileExists{physics.sty}{%
+  \usepackage{physics}%
+  \AtBeginDocument{\ifdefined\SI\RenewCommandCopy\qty\SI\fi}%
+  \typeout{QPPKG: physics loaded}%
+}{\typeout{QPPKG: physics MISSING}}
+
+% Chemistry beyond mhchem's equations: \ch{} formulas (chemformula), oxidation
+% numbers, IUPAC names and reaction mechanisms (chemmacros), and molecular
+% orbital diagrams (modiagram). chemmacros pulls chemformula and siunitx in
+% itself; both are still named here so a change to chemmacros' dependencies
+% cannot quietly remove them.
+%
+% mhchem stays loaded alongside these: \ce{} is the ONE chemistry feature the
+% browser preview can already draw (index.html loads MathJax's mhchem
+% extension), so it remains the right thing for a teacher to write for an
+% equation in running text. chemformula's \ch{} was re-checked next to it -
+% they define different macros and do not interfere.
+\IfFileExists{chemformula.sty}{%
+  \usepackage{chemformula}%
+  \typeout{QPPKG: chemformula loaded}%
+}{\typeout{QPPKG: chemformula MISSING}}
+
+\IfFileExists{chemmacros.sty}{%
+  \usepackage{chemmacros}%
+  \typeout{QPPKG: chemmacros loaded}%
+}{\typeout{QPPKG: chemmacros MISSING}}
+
+\IfFileExists{modiagram.sty}{%
+  \usepackage{modiagram}%
+  \typeout{QPPKG: modiagram loaded}%
+}{\typeout{QPPKG: modiagram MISSING}}
+
+% Trees: taxonomic classification, cladograms, pedigree charts, syntax trees.
+% forest is the one to reach for over tikz's own trees library - it computes the
+% layout instead of leaving sibling spacing to be tuned by hand.
+\IfFileExists{forest.sty}{%
+  \usepackage{forest}%
+  \typeout{QPPKG: forest loaded}%
+}{\typeout{QPPKG: forest MISSING}}
+
+% Process and cycle diagrams: \smartdiagram[circular diagram]{...} - life
+% cycles, water cycles, flow charts, from a plain list of labels.
+\IfFileExists{smartdiagram.sty}{%
+  \usepackage{smartdiagram}%
+  \typeout{QPPKG: smartdiagram loaded}%
+}{\typeout{QPPKG: smartdiagram MISSING}}
+
+% Asymptote: a drawing LANGUAGE rather than a package - loops, functions and
+% real 3D, for a figure that would be unreadable as a list of TikZ coordinates.
+%
+% \begin{asy} ... \end{asy} does not compile in one pass. LaTeX writes the code
+% out as <job>-N.asy, the asy program turns each one into a PDF, and a second
+% LaTeX pass includes them. Both the paper and /render-figure run that sequence
+% (see run_asymptote in src/services/asymptote.py); it is the documented
+% workflow for exactly this case - no shell escape, which stays off because a
+% figure is untrusted input.
+\IfFileExists{asymptote.sty}{%
+  \usepackage{asymptote}%
+  \typeout{QPPKG: asymptote loaded}%
+}{\typeout{QPPKG: asymptote MISSING}}
+
+% svg is loaded so that \includesvg reports itself properly, NOT because it
+% works: converting an SVG needs Inkscape called through shell escape, and this
+% image has neither. Without the package the same line is "Undefined control
+% sequence" and the question prints blank; with it, the svg package says what is
+% wrong. Figures reach the paper as PNG or JPG through \includegraphics - which
+% is what the portal sends, including for figures drawn by /render-figure.
+\IfFileExists{svg.sty}{%
+  \usepackage{svg}%
+  \typeout{QPPKG: svg loaded}%
+}{\typeout{QPPKG: svg MISSING}}
 
 % TikZ libraries. Part of pgf itself, so no \IfFileExists guard is needed - a
 % missing one errors immediately instead of blocking the way \usepackage does.
