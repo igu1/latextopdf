@@ -27,6 +27,49 @@ def get_question_latex_template() -> str:
 \usepackage{amsmath}
 
 % ---------------------------------------------------------------------------
+% CODE BLOCKS, and long identifiers in ordinary text.
+%
+% A programming question arrives as \begin{verbatim}...\end{verbatim}. Plain
+% verbatim NEVER breaks a long line, and a line of Java runs to 150 characters:
+% it went straight off the right-hand margin and the printed paper simply lost
+% the end of it, so the student read half a statement. LaTeX reports that as an
+% overfull hbox - a warning, not an error, so the paper still built and nobody
+% was told.
+%
+% fvextra's Verbatim does break, and \DefineVerbatimEnvironment aims the
+% ORIGINAL name at it: every question already stored as \begin{verbatim} prints
+% correctly with no change to the stored LaTeX and no migration. Switching to
+% lstlisting instead would have meant rewriting every row in the bank.
+%
+% breakanywhere, not merely breaklines: code offers no spaces to break at
+% inside System.out.println("a long string"). tabsize is for Python, where the
+% indentation is the syntax rather than decoration.
+% ---------------------------------------------------------------------------
+\IfFileExists{fvextra.sty}{%
+  \usepackage{fvextra}%
+  \DefineVerbatimEnvironment{verbatim}{Verbatim}%
+    {breaklines=true,breakanywhere=true,fontsize=\small,tabsize=4,xleftmargin=1em}%
+  \typeout{QPPKG: fvextra loaded}%
+}{\typeout{QPPKG: fvextra MISSING}}
+
+% The same right-hand overflow happens in questions with no code block at all:
+% \texttt{FileNotFoundException} inside a sentence is one unbreakable word, and
+% when it does not fit, TeX prefers an overfull line to a visibly loose one.
+%
+% \emergencystretch is what actually fixes that: it lets the paragraph stretch
+% on a final pass, so the long word moves down to the next line instead of being
+% pushed past the margin. It needs no package and works in every engine.
+% hyphenat's [htt] additionally permits hyphenation INSIDE typewriter text,
+% which is a genuine improvement where it takes effect - under LuaLaTeX with
+% fontspec that depends on the monospace font's own hyphenation character, so it
+% is a bonus here rather than the thing being relied on.
+\IfFileExists{hyphenat.sty}{%
+  \usepackage[htt]{hyphenat}%
+  \typeout{QPPKG: hyphenat loaded}%
+}{\typeout{QPPKG: hyphenat MISSING}}
+\emergencystretch=3em
+
+% ---------------------------------------------------------------------------
 % Features the BROWSER preview can already draw, but which this preamble did
 % not load - so a teacher could put one in a question, watch it render on
 % screen, print the paper, and the student would get a blank space. No error is
@@ -478,7 +521,17 @@ def get_question_latex_template() -> str:
                 part = "\\begin{Arabic}\n" .. part .. "\n\\end{Arabic}"
             end
 
-            if string.find(part, "\\begin{tabular}", 1, true) then
+            -- A question ending in an ENVIRONMENT gets no trailing \\.
+            --
+            -- The pair below is a paragraph break for ordinary text, but after
+            -- \end{tabular} or \end{verbatim} the paper is back in vertical
+            -- mode, where \\ is "There's no line here to end" and the compile
+            -- fails - and worse for verbatim, the first \\ would land on the
+            -- SAME line as \end{verbatim}, which the scanner then does not
+            -- recognise as the end at all, so the environment runs away and
+            -- swallows the rest of the paper.
+            if string.find(part, "\\begin{tabular}", 1, true)
+                or string.find(part, "\\begin{verbatim}", 1, true) then
                 print_multiline(part)
             else
                 print_multiline(part .. " \\\\")
