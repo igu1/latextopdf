@@ -4,8 +4,10 @@ Main FastAPI application for LaTeX to PDF converter
 
 import base64
 import logging
+import os
+import secrets
 import subprocess
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field
@@ -25,6 +27,30 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="LaTeX to PDF Converter", version="1.0.0")
+
+# The key a caller must present to compile anything.
+#
+# Set API_KEY in the environment (docker-compose passes it through) and every
+# request to /convert and /render-figure must carry the same value in the
+# X-API-Key header. Leave it unset and the service stays open, which is what
+# makes the rollout safe: deploy the callers with the key first, then set this
+# and restart - no window where a paper fails to generate.
+#
+# / and /health stay open either way, so uptime checks need no secret.
+API_KEY = os.environ.get("API_KEY", "").strip()
+
+
+def require_api_key(x_api_key: str = Header(None, alias="X-API-Key")) -> None:
+    """Rejects a caller that cannot name the key, once one is configured."""
+    if not API_KEY:
+        return
+
+    # compare_digest, not ==: a plain comparison returns as soon as two
+    # characters differ, and the time it takes tells an attacker how much of
+    # the key they have guessed.
+    if not x_api_key or not secrets.compare_digest(x_api_key, API_KEY):
+        logger.warning("Rejected a request with no valid X-API-Key")
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,7 +89,7 @@ async def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/convert")
+@app.post("/convert", dependencies=[Depends(require_api_key)])
 async def convert_question_paper(request: QuestionPaperRequest):
     """
     Convert question paper data to PDF
@@ -100,7 +126,7 @@ async def convert_question_paper(request: QuestionPaperRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/render-figure")
+@app.post("/render-figure", dependencies=[Depends(require_api_key)])
 async def render_figure(request: FigureRequest):
     """
     Draw one diagram and return it as SVG.

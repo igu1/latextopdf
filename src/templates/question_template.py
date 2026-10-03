@@ -8,7 +8,13 @@ def get_question_latex_template() -> str:
     Returns the LaTeX template for question paper generation
     """
     return r'''\documentclass[11pt]{article}
-\usepackage[a4paper,margin=1.4cm]{geometry}
+% headheight/headsep are what the running head below needs; they are given to
+% geometry rather than set afterwards so it lays the page out knowing about
+% them (setting \headheight later only earns a "headheight is too small"
+% warning). With includehead off - geometry's default - the head lives INSIDE
+% the 1.4cm top margin, so the body of every paper stays exactly where it has
+% always been: 24pt of the 40pt margin is used, 16pt is left above it.
+\usepackage[a4paper,margin=1.4cm,headheight=14pt,headsep=10pt]{geometry}
 \usepackage{zref-totpages}
 \usepackage{array}
 \usepackage{fontspec}
@@ -390,6 +396,42 @@ def get_question_latex_template() -> str:
 % naming a missing font can fail EVERY paper, not just the Syriac ones.
 \babelfont[syriac]{rm}[Script=Syriac,Scale=1.2]{Noto Sans Syriac}
 
+% eso-pic puts something on the page BEHIND everything else, on every page,
+% which is exactly what the institution watermark is. \LenToUnit comes with it
+% and is the only way to write a real length inside picture coordinates.
+%
+% Guarded like the other optional packages above: a paper is never failed over
+% its watermark, so an image built without eso-pic simply prints no logo (the
+% \ifdefined test in the body below).
+\IfFileExists{eso-pic.sty}{%
+  \usepackage{eso-pic}%
+  \typeout{QPPKG: eso-pic loaded}%
+}{\typeout{QPPKG: eso-pic MISSING}}
+
+% The paper's code at the top left of every page.
+%
+% A page that comes loose from its staple has to be identifiable, which is why
+% a question paper carries its code on every sheet rather than only on the
+% first. Page 1 is the exception: it already prints the code on its own first
+% line, beside Name and Reg.No, so it is left on `plain` and does not say it
+% twice.
+%
+% Written out by hand rather than with fancyhdr: a page style is six lines of
+% kernel macros, and this image is a minimal TeX Live where every extra
+% package is one more thing that can be missing (see the \IfFileExists guards
+% above). The foot is kept exactly as `plain` had it - the page number,
+% centred - so nothing but the head changes.
+\makeatletter
+\newcommand{\qpRunningCode}{}
+\def\ps@qpcode{%
+  \let\@mkboth\@gobbletwo
+  \def\@oddhead{\normalfont\small\qpRunningCode\hfil}%
+  \def\@evenhead{\normalfont\small\qpRunningCode\hfil}%
+  \def\@oddfoot{\normalfont\hfil\thepage\hfil}%
+  \let\@evenfoot\@oddfoot
+}
+\makeatother
+
 % enumitem must load after babel so babel's RTL list adaptations see (and
 % survive) enumitem's list re-implementation
 \usepackage{enumitem}
@@ -468,6 +510,19 @@ def get_question_latex_template() -> str:
 \end{luacode*}
 
 \begin{document}
+
+% Outside the luacode* environment on purpose. That environment is a group,
+% and \pagestyle does nothing but \def\@oddhead and friends - chosen inside
+% it, the style is undone at \end{luacode*} and only the pages shipped out
+% before that point carry a head. Page 1 would look right and every page
+% after it would lose the code.
+%
+% The code itself is filled in from the JSON below with \gdef, for the same
+% reason. \thispagestyle is already global, but it is kept here beside its
+% partner: page 1 prints the code on its own first line, so it stays plain.
+\pagestyle{qpcode}
+\thispagestyle{plain}
+
 \begin{luacode*}
     if qperror then
         tex.print(qperror)
@@ -485,7 +540,50 @@ def get_question_latex_template() -> str:
         tex.print(lines)
     end
 
-    tex.print(data.qp_code .. "\\hfill  Name .............................")
+    -- The institution's watermark, centred on every page under the
+    -- questions. Declared here, before anything is typeset, because
+    -- \AddToShipoutPictureBG applies from this point on - to every page of
+    -- the paper, including the ones LaTeX has not broken yet.
+    --
+    -- Three things must be true before a single line is emitted: the portal
+    -- sent a logo, the file was written beside the paper, and eso-pic is
+    -- installed - \AtPageCenter is its command, and centring on the sheet is
+    -- all that is asked of it, so there are no coordinates here to get wrong.
+    -- Any of the three missing prints the paper exactly as it prints with no
+    -- watermark at all, which is also what an institution that has never
+    -- uploaded a logo gets.
+    --
+    -- The picture arrives already grey and faded (the portal does that in the
+    -- browser), so nothing here decides how it looks. It is only placed: dead
+    -- centre of the sheet, at most half of it either way, aspect kept.
+    local logo = data.logo
+    if type(logo) == "string" and logo ~= "" then
+        tex.print("\\ifdefined\\AtPageCenter")
+        tex.print("\\IfFileExists{" .. logo .. "}{%")
+        tex.print("\\AddToShipoutPictureBG{\\AtPageCenter{%")
+        tex.print("\\makebox(0,0){\\includegraphics[width=0.5\\paperwidth,height=0.5\\paperheight,keepaspectratio]{" .. logo .. "}}%")
+        tex.print("}}}{}")
+        tex.print("\\fi")
+    end
+
+    -- What the running head prints. \gdef, not \renewcommand: this is inside
+    -- the luacode* group (see \pagestyle above \begin{luacode*}), and a local
+    -- definition would be gone by the time the second page is shipped out.
+    tex.print("\\gdef\\qpRunningCode{" .. data.qp_code .. "}")
+
+    -- Code, page count, Name - one line, the way a university paper prints it.
+    --
+    -- The code and the Name sit in boxes of NO width, so the two \hfill either
+    -- side of the page count are always equal and it falls on the centre of
+    -- the line however long the code is. Written as plain \hfill the middle
+    -- would drift with the length of the code.
+    --
+    -- \ztotpages (zref-totpages) is the whole paper's page count. It is 0 on
+    -- the first LaTeX pass and right on the second, which is why this service
+    -- has always compiled every paper twice.
+    tex.print("\\noindent\\makebox[0pt][l]{" .. data.qp_code .. "}"
+        .. "\\hfill (Pages : \\ztotpages)\\hfill"
+        .. "\\makebox[0pt][r]{Name .............................}")
     tex.print("\\begin{flushright}")
     tex.print("Reg.No .............................\\\\")
     tex.print("\\end{flushright}")

@@ -4,5 +4,10 @@ services:
     restart: unless-stopped
     ports:
       - "5013:5013"
+    environment:
+      # The key callers must present as X-API-Key. Taken from the host's
+      # environment or a .env file beside this one, so it is never committed.
+      # Unset -> the service stays open, which is how it ran before.
+      - API_KEY=${API_KEY:-}
     volumes:
       - ./Photo/Qpbank:/app/Photo/Qpbank

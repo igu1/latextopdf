@@ -78,6 +78,61 @@ def compile_latex(latex_source: str, engine: str = "pdflatex") -> bytes:
         return pdf_bytes
 
 
+# Where the watermark is written, relative to the LaTeX run's directory. The
+# name is fixed: nothing but the institution logo is ever written to it.
+LOGO_FILE = "institution-logo.png"
+
+# What \includegraphics can actually read, by the bytes a file starts with.
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+JPEG_MAGIC = b"\xff\xd8\xff"
+
+
+async def _prepare_logo(logo: Any, photo_dir, qp_code: str) -> str:
+    """
+    Writes the institution logo next to the paper and returns its path.
+
+    Returns "" for a paper with no logo, and for a logo that could not be
+    used - a 404 on the URL, a data URL that is not an image, a file the
+    service cannot read. A paper is never failed over its watermark: the
+    questions are the paper, and the crest is decoration.
+    """
+    source = (logo or "").strip() if isinstance(logo, str) else ""
+    if not source:
+        return ""
+
+    await process_images({LOGO_FILE: source}, photo_dir)
+
+    written = photo_dir / LOGO_FILE
+    if not written.exists() or written.stat().st_size == 0:
+        logger.warning("Institution logo could not be read for %s - the paper "
+                       "will print without a watermark", qp_code)
+        return ""
+
+    # What was actually written, from its first bytes rather than its name.
+    #
+    # This is the one check that has to be here. \includegraphics picks its
+    # reader by file EXTENSION, so a JPEG written as .png - or an HTML page
+    # from a server that answers 200 for a file it does not have - is not a
+    # picture that prints badly, it is a LaTeX error that takes the whole
+    # paper down with it. Eight bytes is cheap insurance against losing a
+    # question paper.
+    head = written.read_bytes()[:8]
+    if head.startswith(PNG_MAGIC):
+        path = LOGO_FILE
+    elif head.startswith(JPEG_MAGIC):
+        # Right picture, wrong name: give it the one \includegraphics needs.
+        path = LOGO_FILE.rsplit(".", 1)[0] + ".jpg"
+        written.replace(photo_dir / path)
+    else:
+        logger.warning("Institution logo for %s is not a PNG or JPEG (starts "
+                       "%r) - printing without a watermark", qp_code, head[:4])
+        written.unlink(missing_ok=True)
+        return ""
+
+    logger.info("Institution watermark ready for %s", qp_code)
+    return "./Photo/Qpbank/" + path
+
+
 async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
     """
     Compile a question paper from structured data to PDF
@@ -107,6 +162,16 @@ async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         await process_images(question_data.get('images', {}), photo_dir)
         
         processed_data = question_data.copy()
+
+        # The institution's watermark, if one was sent. It goes through the
+        # same writer as the question pictures - so a data URL, a URL or a
+        # path all work - and what reaches the template is the FILE PATH, not
+        # the picture: question.json is read by the paper itself, and a
+        # megabyte of base64 in it would be written into the LaTeX run for no
+        # reason. A logo that did not arrive leaves the key empty, and the
+        # template then prints no watermark at all.
+        processed_data['logo'] = await _prepare_logo(
+            question_data.get('logo'), photo_dir, qp_code)
         for part in processed_data.get('qp_parts', []):
             for i, content in enumerate(part.get('content', [])):
                 processed_content = await extract_and_download_urls(content, photo_dir)
