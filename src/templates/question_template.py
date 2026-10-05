@@ -7,14 +7,31 @@ def get_question_latex_template() -> str:
     """
     Returns the LaTeX template for question paper generation
     """
-    return r'''\documentclass[11pt]{article}
+    return r'''\documentclass[12pt]{article}
+% The measure - how long a line of a question is - decides whether a paper
+% reads easily, and matters more than the size of the type. At 11pt inside
+% 1.4cm margins a line ran to 98 characters; comfortable reading is 60-75 and
+% 85 is about the limit, which is why the questions came out as a block of
+% text. 12pt inside 2cm gives 84 - inside that limit, and the widest the page
+% takes before it starts to read as a block again. Measured on a real paper,
+% the extra size cost nothing:
+% the same 60 questions printed on the same number of pages, because the page
+% count follows how long the questions are and where the breaks fall.
+%
 % headheight/headsep are what the running head below needs; they are given to
 % geometry rather than set afterwards so it lays the page out knowing about
 % them (setting \headheight later only earns a "headheight is too small"
 % warning). With includehead off - geometry's default - the head lives INSIDE
 % the 1.4cm top margin, so the body of every paper stays exactly where it has
-% always been: 24pt of the 40pt margin is used, 16pt is left above it.
-\usepackage[a4paper,margin=1.4cm,headheight=14pt,headsep=10pt]{geometry}
+% always been, except that `top` is 1.7cm rather than 1.4cm.
+%
+% That 3mm is for the running head. An 18pt line needs 22pt of height and a
+% 10pt gap under it; inside a 1.4cm margin its TOP would sit 3.5mm from the
+% edge of the sheet, which is inside the strip most laser printers cannot
+% print at all - the code would come out clipped or missing on exactly the
+% pages it is there for. At 1.7cm it starts 5.6mm down, which every printer
+% manages.
+\usepackage[a4paper,left=2cm,right=2cm,top=1.7cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
 \usepackage{zref-totpages}
 \usepackage{array}
 \usepackage{fontspec}
@@ -423,11 +440,48 @@ def get_question_latex_template() -> str:
 % centred - so nothing but the head changes.
 \makeatletter
 \newcommand{\qpRunningCode}{}
+
+% The page number, and "Turn over" on every page but the last.
+%
+% A student handed a stapled paper has no way of knowing whether there is
+% another page - and papers do get mis-collated and mis-copied. This is the
+% line that stops someone answering fifteen questions because they never knew
+% page 2 existed. \llap hangs it off the right margin so the page number stays
+% centred on the page rather than on what is left of it.
+%
+% \ztotpages is 0 on the first LaTeX pass and right on the second, so the last
+% page loses the line on the pass that produces the PDF.
+\newcommand{\qpPageFoot}{%
+  % "2/4", not "2": a student holding one sheet can tell whether the paper is
+  % whole, and an invigilator collecting them can see at a glance that a page
+  % is missing. \ztotpages is 0 on the first LaTeX pass and right on the
+  % second, which is the pass that produces the PDF.
+  \normalfont\hfil\thepage/\ztotpages\hfil
+  \llap{\ifnum\value{page}<\ztotpages\bfseries Turn over\fi}%
+}
+
 \def\ps@qpcode{%
   \let\@mkboth\@gobbletwo
-  \def\@oddhead{\normalfont\small\qpRunningCode\hfil}%
-  \def\@evenhead{\normalfont\small\qpRunningCode\hfil}%
-  \def\@oddfoot{\normalfont\hfil\thepage\hfil}%
+  % 12pt bold. The code on page 1 is 18pt because it identifies the PAPER;
+  % up here it identifies the SHEET, which a reader looks for rather than
+  % reads - and a line as large as page 1's would sit on top of the questions.
+  % On the RIGHT. Page 1 carries the code on the left, where it is read with
+  % the Name and Reg. No beside it; on the pages after it the code is only a
+  % label for the sheet, and the right-hand corner is where a reader thumbing
+  % a stack of papers looks for one.
+  \def\@oddhead{\normalfont\fontsize{12}{14}\selectfont\bfseries\hfil\qpRunningCode}%
+  \def\@evenhead{\@oddhead}%
+  \def\@oddfoot{\qpPageFoot}%
+  \let\@evenfoot\@oddfoot
+}
+
+% The first page: no running code - its code is the first thing in the body -
+% but the same foot, because page 1 is the page most likely to be read alone.
+\def\ps@qpfirst{%
+  \let\@mkboth\@gobbletwo
+  \def\@oddhead{}%
+  \def\@evenhead{}%
+  \def\@oddfoot{\qpPageFoot}%
   \let\@evenfoot\@oddfoot
 }
 \makeatother
@@ -521,7 +575,7 @@ def get_question_latex_template() -> str:
 % reason. \thispagestyle is already global, but it is kept here beside its
 % partner: page 1 prints the code on its own first line, so it stays plain.
 \pagestyle{qpcode}
-\thispagestyle{plain}
+\thispagestyle{qpfirst}
 
 \begin{luacode*}
     if qperror then
@@ -581,33 +635,134 @@ def get_question_latex_template() -> str:
     -- \ztotpages (zref-totpages) is the whole paper's page count. It is 0 on
     -- the first LaTeX pass and right on the second, which is why this service
     -- has always compiled every paper twice.
-    tex.print("\\noindent\\makebox[0pt][l]{" .. data.qp_code .. "}"
-        .. "\\hfill (Pages : \\ztotpages)\\hfill"
-        .. "\\makebox[0pt][r]{Name .............................}")
-    tex.print("\\begin{flushright}")
-    tex.print("Reg.No .............................\\\\")
-    tex.print("\\end{flushright}")
+    -- The sizes of the heading, in points, as the institution's own papers
+    -- print them: the code at 18, everything else on these two lines at 12.
+    -- \fontsize takes the size and the baseline to go with it and needs
+    -- \selectfont to take effect; each one is inside a box or a group, so it
+    -- ends where that does.
+    -- Name and Reg. No are ONE block, hung at the right margin.
+    --
+    -- They used to be written in two different places - Name on this line,
+    -- Reg. No in a flushright block of its own underneath - and each was
+    -- right-aligned on its own. "Reg. No" is 16pt wider than "Name", so the
+    -- two words started 16pt apart however carefully the dots were counted.
+    -- In one block with a label column they can only line up.
+    --
+    -- The label column is 2cm: "Reg. No" measures about 1.73cm at 12pt bold,
+    -- and in a narrower box it overflowed, so its dots began before Name's
+    -- did. Half a centimetre of clearance costs nothing and the two can only
+    -- line up.
+    --
+    -- \dotfill rather than a typed run of full stops: the dots then end
+    -- exactly on the margin whatever the labels say, and nobody has to count
+    -- them again if a label is renamed or translated.
+    --
+    -- The box is zero width, so the block hangs to the LEFT of the margin and
+    -- the page count between the \hfill either side stays exactly centred.
+    tex.print("\\noindent\\makebox[0pt][l]{\\fontsize{18}{22}\\selectfont\\bfseries " .. data.qp_code .. "}"
+        .. "\\hfill {\\fontsize{12}{14}\\selectfont\\bfseries (Pages : \\ztotpages)}\\hfill"
+        .. "\\makebox[0pt][r]{"
+        .. "\\begin{minipage}[t]{6.5cm}"
+        .. "\\setlength{\\parindent}{0pt}"
+        .. "\\fontsize{12}{14}\\selectfont\\bfseries"
+        .. "\\makebox[2cm][l]{Name}\\dotfill\\par"
+        .. "\\vspace{4pt}"
+        .. "\\makebox[2cm][l]{Reg. No}\\dotfill\\par"
+        .. "\\end{minipage}}")
+
+    -- The four blocks of the heading - who the paper belongs to, what the
+    -- examination is, what it is worth, and then the paper itself - are set
+    -- 24pt apart, with a little more before the first section. Measured on a
+    -- printed paper they had been 23, 31 and 24: close enough to look
+    -- accidental rather than chosen, and the widest of them left Time and Max
+    -- marks floating between the title above and the questions below.
+    tex.print("\\vspace{1pt}")
     tex.print("\\begin{center}")
 
     tex.print("\\begin{minipage}{5in}")
     tex.print("\\centering")
-    tex.print(data.qp_name)
+
+    -- The heading is two things of different size: the EXAMINATION (14pt) and
+    -- the PAPER it is for (12pt). The portal sends them as one string with a
+    -- LaTeX line break between, so it is split on the first one. Both are
+    -- bold; a question paper's heading block is bold throughout.
+    --
+    -- Everything after that first break is the paper line, however many
+    -- breaks it holds of its own - a paper named in two scripts prints both
+    -- at the same size.
+    local nameHead = data.qp_name
+    local nameRest = nil
+    local cut = string.find(data.qp_name, "\\\\", 1, true)
+    if cut then
+        nameHead = string.sub(data.qp_name, 1, cut - 1)
+        -- The WHOLE run of backslashes, not two of them: the portal's screens
+        -- have not always agreed on how many to send - two from the generate
+        -- flow, four from the preview - and a leftover pair would print as a
+        -- line break of its own in front of the paper's name, or swallow the
+        -- first word after it.
+        nameRest = string.gsub(string.sub(data.qp_name, cut), "^\\+", "")
+    end
+
+    tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
+    print_multiline(nameHead)
+    tex.print("\\par}")
+
+    -- The paper's name is NOT bold: the examination above it is the heading,
+    -- and setting both bold leaves nothing to tell them apart but their size.
+    --
+    -- 5pt of air above it, because without any the course sat CLOSER to the
+    -- examination name (14pt) than the examination's own two lines are to
+    -- each other (17pt) - so it read as a third line of the title rather than
+    -- as the paper being examined.
+    if nameRest and string.find(nameRest, "%S") then
+        tex.print("\\vspace{5pt}")
+        tex.print("{\\fontsize{12}{14}\\selectfont")
+        print_multiline(nameRest)
+        tex.print("\\par}")
+    end
     tex.print("\\end{minipage} \\\\")
 
-    tex.print("\\vspace{0.3cm}")
+    -- Was 0.3cm (8.5pt), which made this the widest gap on the page.
+    tex.print("\\vspace{1.5pt}")
     tex.print("\\end{center}")
     tex.print("Time : " .. data.time .. " \\hfill " .. "Max marks : " .. data.max_marks)
+
+    -- A little more air before the paper proper than between the heading's
+    -- own blocks: this is where the reading starts.
+    tex.print("\\vspace{4pt}")
 
     -- Paper-level direction from the portal's "RTL Paper" checkbox. The header
     -- block above (code / name / time / marks) always stays left-to-right;
     -- only the question part below follows this flag.
     local paper_is_rtl = (data.rtl == true)
 
-    tex.print("\\begin{enumerate}")
+    -- No list round the parts.
+    --
+    -- There used to be a \begin{enumerate} here and an \end{enumerate} after
+    -- the loop, holding no \item of its own. It did two things, both
+    -- unwanted: it indented EVERY section, heading and question 30pt inside
+    -- the left margin - so a question's text began 3.06cm from the edge of
+    -- the sheet while ending 2cm from the other - and, being a list with no
+    -- items, it was the "Something's wrong--perhaps a missing \item" error
+    -- that has been in the log of every paper this service has ever made.
+    --
+    -- The questions are already a list: the portal sends each section's
+    -- content as its own \begin{enumerate} with the labels and numbering the
+    -- paper's layout asks for.
     for i, row in ipairs(data.qp_parts) do
         tex.print("\\begin{center}")
         tex.print("\\textbf{" .. row.part_name .. "} \\\\")
-        tex.print("\\texttt{" .. row.part_description .. "} \\\\")
+        -- Plain, in the paper's own face and size. It was typewriter, which
+        -- looked like a system message and was wider than it needed to be on
+        -- a measure the questions themselves have to share; italic read as an
+        -- aside. The line is simply part of the paper.
+        -- In a group, and that is not cosmetic. The line begins with "[" -
+        -- "[Answer All. Each Question Carries 5 Marks]" - and the line before
+        -- it ends with \\. TeX then reads \\[Answer All...] as a line break
+        -- with an optional LENGTH argument, swallows "[A", and loses the
+        -- spacing of everything after it in the section. The braces end the
+        -- \\ before the bracket is reached.
+        tex.print("{" .. row.part_description .. "} \\\\")
         tex.print("\\end{center}")
         for j, part in ipairs(row.content) do
             -- Paper-level RTL (the portal's checkbox): typeset the whole
@@ -628,7 +783,14 @@ def get_question_latex_template() -> str:
             -- SAME line as \end{verbatim}, which the scanner then does not
             -- recognise as the end at all, so the environment runs away and
             -- swallows the rest of the paper.
-            if string.find(part, "\\begin{tabular}", 1, true)
+            -- Any content that ENDS with an \end{...} is in vertical mode
+            -- already, whatever the environment was. Only tabular and
+            -- verbatim were named here, which was enough while a list sat
+            -- round the whole paper; with that gone, a section's questions -
+            -- which arrive as one \begin{enumerate}...\end{enumerate} - end
+            -- that way too, and every section earned a "There's no line here
+            -- to end".
+            if string.find(string.gsub(part, "%s+$", ""), "\\end{%a+%*?}$")
                 or string.find(part, "\\begin{verbatim}", 1, true) then
                 print_multiline(part)
             else
@@ -642,7 +804,6 @@ def get_question_latex_template() -> str:
         tex.print("\\end{flushright}")
 
     end
-    tex.print("\\end{enumerate}")
 
 \end{luacode*}
 \end{document}
