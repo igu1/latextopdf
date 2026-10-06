@@ -695,12 +695,24 @@ def get_question_latex_template() -> str:
     local cut = string.find(data.qp_name, "\\\\", 1, true)
     if cut then
         nameHead = string.sub(data.qp_name, 1, cut - 1)
-        -- The WHOLE run of backslashes, not two of them: the portal's screens
-        -- have not always agreed on how many to send - two from the generate
-        -- flow, four from the preview - and a leftover pair would print as a
-        -- line break of its own in front of the paper's name, or swallow the
-        -- first word after it.
-        nameRest = string.gsub(string.sub(data.qp_name, cut), "^\\+", "")
+        -- The separator is two backslashes, or four: the portal's screens
+        -- have never agreed - two from the generate flow, four from the
+        -- preview - and a leftover pair prints as a line break of its own
+        -- in front of the paper's name, or swallows the first word after it.
+        -- An odd backslash belongs to a COMMAND, not to the separator.
+        --
+        -- Taking the whole run fixed one thing and broke another: the
+        -- paper's name arrives wrapped in a font command - \textnormal{...}
+        -- for Latin, \textmalayalam{...} and friends for the rest - whose
+        -- single backslash sits at the end of that same run. Stripped with
+        -- the separator, the command lost its backslash and TeX printed its
+        -- NAME: a heading reading "textnormalFundamentals of Computers...",
+        -- with the braces swallowed as grouping.
+        --
+        -- So the separator goes in PAIRS, and an odd one is kept.
+        local nameTail = string.sub(data.qp_name, cut)
+        local nameLead = string.match(nameTail, "^\\+") or ""
+        nameRest = string.rep("\\", #nameLead % 2) .. string.sub(nameTail, #nameLead + 1)
     end
 
     tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
