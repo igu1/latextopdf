@@ -49,6 +49,25 @@ class QuestionPaperRequest(BaseModel):
     # is what an institution with no logo file on disk relies on.
     logo: Optional[str] = None
 
+    # The institution's NAME, centred above the examination - the portal's
+    # "Institution name" tick. The name itself rather than a flag: which
+    # college this is belongs to the portal, and a paper printed without one
+    # simply sends nothing.
+    institution: Optional[str] = None
+
+    # The dotted Name and Reg. No block at the top right - the portal's
+    # "Name and Reg. No. block" tick.
+    #
+    # Defaults to TRUE, and that default is the compatibility promise: every
+    # paper this service has made so far carried the block, and a caller that
+    # says nothing must still get it.
+    show_name_reg: Optional[bool] = True
+
+    # The paper's own instruction, printed once between the heading and the
+    # first section - "Answer all questions in the answer booklet provided."
+    # Empty or missing prints no line at all.
+    paper_instruction: Optional[str] = None
+
     # NOTE: this service no longer password-protects PDFs. It always returns an
     # unprotected file so the portal's "View" actions can open it; the portal
     # applies the password at download time. A `password` field sent by an

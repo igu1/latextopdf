@@ -519,6 +519,92 @@ def get_question_latex_template() -> str:
   \renewenvironment{flushleft}{\par}{\par}%
 }{\end{otherlanguage}}
 
+% A code block, printed as code whichever way the paper reads.
+%
+% A program has no direction to inherit. Left in the paper's own, every line
+% of a snippet inside an Arabic paper was reordered by the bidirectional
+% algorithm - "int x = 1;" printed as ";int x = 1", a closing brace jumped to
+% the front of its line, "a <= b" came out reversed. A student copying that
+% writes something that does not compile.
+%
+% english, unstarred, because it is the PARAGRAPH direction that has to turn
+% back; the starred form switches the text alone and leaves the paragraph
+% mirrored. On a left-to-right paper this changes nothing at all - which is
+% why the portal is free to wrap every code block it sends, and does.
+\newenvironment{qpcode}{%
+  \begin{otherlanguage}{english}%
+}{\end{otherlanguage}}
+
+% Question numbers in Arabic, for a paper whose layout asks for them.
+%
+%   \arabicindicnum{<number>}   ١ ٢ ٣ - the Eastern Arabic-Indic digits
+%   \arabicalphanum{<number>}   ا ب ت - the hijai letters, alif ba ta
+%
+% The portal writes them round \value{enumi} for questions and \value{enumii}
+% for a passage's sub-questions, so neither needs a counter of its own and
+% neither has to be registered with enumitem.
+%
+% In Lua rather than in TeX arithmetic, because \numexpr ROUNDS its division:
+% \numexpr15/10 is 2, so the tens digit would come out wrong from 5 upwards.
+% Past the twenty-eight letters the letter form falls back to the digits
+% rather than inventing a glyph - the same rule the portal's sample follows.
+\begin{luacode*}
+    local arabic_indic = {"٠","١","٢","٣","٤","٥","٦","٧","٨","٩"}
+
+    local arabic_letters = {
+        "ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص",
+        "ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","ه","و","ي"
+    }
+
+    function tcs_arabic_digits(n)
+        local out = ""
+        for digit in tostring(math.max(0, math.floor(tonumber(n) or 0))):gmatch("%d") do
+            out = out .. arabic_indic[tonumber(digit) + 1]
+        end
+        tex.sprint(out)
+    end
+
+    function tcs_arabic_letter(n)
+        local i = math.floor(tonumber(n) or 0)
+        if arabic_letters[i] then tex.sprint(arabic_letters[i]) else tcs_arabic_digits(i) end
+    end
+\end{luacode*}
+
+\newcommand{\arabicindicnum}[1]{\directlua{tcs_arabic_digits(\number#1)}}
+\newcommand{\arabicalphanum}[1]{\directlua{tcs_arabic_letter(\number#1)}}
+
+% The mark a question carries, and the outcome it serves, at the right margin
+% of its LAST line - which is where the portal's sample puts them.
+%
+%   \qpmark{(CO2)\quad(5)}
+%
+% \hfill on its own does not do it. At the end of a paragraph TeX's own
+% \parfillskip is infinitely stretchable too, so the two share what is left of
+% the line and the mark comes out in the MIDDLE of it. The sequence below is
+% the standard remedy: fill, a penalty that lets the mark drop to a line of
+% its own rather than overprint the text, a second fill, and \parfillskip set
+% to nothing so the paragraph cannot stretch against us.
+%
+% On a right-to-left paper "the right margin" is the left one. \hfil is
+% direction-aware inside babel's RTL paragraphs, so nothing here has to know
+% which way the paper reads.
+%
+% \mbox keeps the mark whole: "(5)" is never broken across two lines, and a
+% tag written in Latin letters inside an Arabic paper keeps its own order.
+%
+% THE BRACES MATTER. \parfillskip is set so the paragraph's own stretch
+% cannot compete with the fills above - but a macro body is not a group, so
+% without them the setting outlived the question and every later paragraph in
+% the section was stretched to the full measure. It showed on the one question
+% that has a paragraph AFTER its first: the line above its code block came out
+% as "Trace        the        output."
+% Inside braces the \par still happens while the setting is live, which is
+% all it is for, and the setting is gone by the next question.
+\newcommand{\qpmark}[1]{%
+  {\unskip\nobreak\hfil\penalty50\hskip1em\null\nobreak\hfil
+  \mbox{#1}%
+  \parfillskip=0pt\finalhyphendemerits=0\par}}
+
 % Read the request JSON already in the preamble: \babelfont (used for the
 % optional per-request font overrides) is a preamble-only command. The parsed
 % table is kept in the global `qpdata` for the document body below.
@@ -625,6 +711,14 @@ def get_question_latex_template() -> str:
     -- definition would be gone by the time the second page is shipped out.
     tex.print("\\gdef\\qpRunningCode{" .. data.qp_code .. "}")
 
+    -- Paper-level direction, from the portal's writing-direction setting.
+    -- Read here because the heading below is built from it; what follows it
+    -- is the time and marks line, which changes ends on a right-to-left
+    -- paper, and the question part, which is typeset right-to-left. The rest
+    -- of the heading - the code and Name line, the institution and the
+    -- examination - prints the same either way.
+    local paper_is_rtl = (data.rtl == true)
+
     -- Code, page count, Name - one line, the way a university paper prints it.
     --
     -- The code and the Name sit in boxes of NO width, so the two \hfill either
@@ -659,16 +753,35 @@ def get_question_latex_template() -> str:
     --
     -- The box is zero width, so the block hangs to the LEFT of the margin and
     -- the page count between the \hfill either side stays exactly centred.
-    tex.print("\\noindent\\makebox[0pt][l]{\\fontsize{18}{22}\\selectfont\\bfseries " .. data.qp_code .. "}"
-        .. "\\hfill {\\fontsize{12}{14}\\selectfont\\bfseries (Pages : \\ztotpages)}\\hfill"
-        .. "\\makebox[0pt][r]{"
-        .. "\\begin{minipage}[t]{6.5cm}"
+    -- The Name and Reg. No block is a LAYOUT choice ("Name and Reg. No.
+    -- block - dotted lines, top right"). A paper whose layout turns it off
+    -- prints the code and the page count and leaves the corner empty; the
+    -- box is still emitted, empty and of no width, so the page count between
+    -- the two \hfill stays exactly centred either way.
+    --
+    -- Missing means printed: every paper this service has made so far
+    -- carried the block, and a request that says nothing must still get it.
+    local show_name_reg = (data.show_name_reg ~= false)
+
+    local code_box = "\\fontsize{18}{22}\\selectfont\\bfseries " .. data.qp_code
+    local namereg_box = "\\begin{minipage}[t]{6.5cm}"
         .. "\\setlength{\\parindent}{0pt}"
         .. "\\fontsize{12}{14}\\selectfont\\bfseries"
         .. "\\makebox[2cm][l]{Name}\\dotfill\\par"
         .. "\\vspace{4pt}"
         .. "\\makebox[2cm][l]{Reg. No}\\dotfill\\par"
-        .. "\\end{minipage}}")
+        .. "\\end{minipage}"
+    if not show_name_reg then namereg_box = "" end
+    local pages_box = "{\\fontsize{12}{14}\\selectfont\\bfseries (Pages : \\ztotpages)}"
+
+    -- This line does NOT turn round on a right-to-left paper. The code keeps
+    -- the left margin and the Name and Reg. No the right one, whichever way
+    -- the paper reads: mirrored, the Name's \dotfill ran into the page count
+    -- and the code sat where the student writes. Only the time and the marks
+    -- below change ends.
+    tex.print("\\noindent\\makebox[0pt][l]{" .. code_box .. "}"
+        .. "\\hfill " .. pages_box .. "\\hfill"
+        .. "\\makebox[0pt][r]{" .. namereg_box .. "}")
 
     -- The four blocks of the heading - who the paper belongs to, what the
     -- examination is, what it is worth, and then the paper itself - are set
@@ -681,6 +794,22 @@ def get_question_latex_template() -> str:
 
     tex.print("\\begin{minipage}{5in}")
     tex.print("\\centering")
+
+    -- The institution's name, above the examination, when the layout says the
+    -- paper carries one. The portal sends the name itself, or nothing at all
+    -- for a paper that prints without it - so the tick is decided there, with
+    -- the name beside it, and this only places what arrives.
+    --
+    -- 13pt: between the examination under it (14) and the paper line under
+    -- that (12). It is the line a reader sees first and the one they read
+    -- least closely, which is why it is not the largest.
+    local institution = data.institution
+    if type(institution) == "string" and institution ~= "" then
+        tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
+        print_multiline(institution)
+        tex.print("\\par}")
+        tex.print("\\vspace{3pt}")
+    end
 
     -- The heading is two things of different size: the EXAMINATION (14pt) and
     -- the PAPER it is for (12pt). The portal sends them as one string with a
@@ -737,16 +866,43 @@ def get_question_latex_template() -> str:
     -- Was 0.3cm (8.5pt), which made this the widest gap on the page.
     tex.print("\\vspace{1.5pt}")
     tex.print("\\end{center}")
-    tex.print("Time : " .. data.time .. " \\hfill " .. "Max marks : " .. data.max_marks)
+
+    -- paper_is_rtl is read once, above the heading.
+
+    -- The time and the marks change ends on a right-to-left paper: it is read
+    -- from the right, so the time starts at the right margin and the marks
+    -- finish at the left. Each label is still set left to right inside its own
+    -- end - they are Latin words - which is what swapping the two sides does
+    -- and what the portal's sample shows.
+    if paper_is_rtl then
+        tex.print("Max marks : " .. data.max_marks .. " \\hfill " .. "Time : " .. data.time)
+    else
+        tex.print("Time : " .. data.time .. " \\hfill " .. "Max marks : " .. data.max_marks)
+    end
+
+    -- The paper's own instruction - "Answer all questions in the answer
+    -- booklet provided." - printed once, between the heading and the first
+    -- section, which is what the layout page promises under the box it is
+    -- typed in. A paper whose layout asks for none sends none and the line
+    -- is not there at all.
+    --
+    -- In braces because the line often begins with "[": the time and marks
+    -- line above ends a paragraph, and TeX reading \\[Answer ...] would take
+    -- the bracket as a length for the line break and swallow the first
+    -- words. The same guard the section instruction has carried for as long.
+    local paper_instruction = data.paper_instruction
+    if type(paper_instruction) == "string" and paper_instruction ~= "" then
+        tex.print("\\vspace{6pt}")
+        tex.print("\\begin{center}")
+        tex.print("{")
+        print_multiline(paper_instruction)
+        tex.print("}")
+        tex.print("\\end{center}")
+    end
 
     -- A little more air before the paper proper than between the heading's
     -- own blocks: this is where the reading starts.
     tex.print("\\vspace{4pt}")
-
-    -- Paper-level direction from the portal's "RTL Paper" checkbox. The header
-    -- block above (code / name / time / marks) always stays left-to-right;
-    -- only the question part below follows this flag.
-    local paper_is_rtl = (data.rtl == true)
 
     -- No list round the parts.
     --
@@ -774,7 +930,16 @@ def get_question_latex_template() -> str:
         -- with an optional LENGTH argument, swallows "[A", and loses the
         -- spacing of everything after it in the section. The braces end the
         -- \\ before the bracket is reached.
-        tex.print("{" .. row.part_description .. "} \\\\")
+        -- A section with nothing to say under its heading prints nothing
+        -- there. It used to print an empty pair of braces and a line break,
+        -- which is a blank line between the heading and the first question -
+        -- and that is now reachable: a layout can put the marks line BESIDE
+        -- the instruction, which leaves the portal sending the two as one
+        -- line here and nothing at the end of the section.
+        if type(row.part_description) == "string"
+            and row.part_description:match("%S") then
+            tex.print("{" .. row.part_description .. "} \\\\")
+        end
         tex.print("\\end{center}")
         for j, part in ipairs(row.content) do
             -- Paper-level RTL (the portal's checkbox): typeset the whole
@@ -811,9 +976,15 @@ def get_question_latex_template() -> str:
             end
         end
 
-        tex.print("\\begin{flushright}")
-        tex.print("\\texttt{\\textbf{" .. row.footer .. "}} \\\\")
-        tex.print("\\end{flushright}")
+        -- And a section whose marks line is printed BESIDE its instruction
+        -- has nothing to print at its end. An empty footer used to come out
+        -- as an empty right-aligned line, which is a blank line of its own
+        -- between one section and the next.
+        if type(row.footer) == "string" and row.footer:match("%S") then
+            tex.print("\\begin{flushright}")
+            tex.print("\\texttt{\\textbf{" .. row.footer .. "}} \\\\")
+            tex.print("\\end{flushright}")
+        end
 
     end
 
