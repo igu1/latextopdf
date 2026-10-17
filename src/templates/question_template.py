@@ -693,15 +693,21 @@ def get_question_latex_template() -> str:
     -- watermark at all, which is also what an institution that has never
     -- uploaded a logo gets.
     --
-    -- The picture arrives already grey and faded (the portal does that in the
-    -- browser), so nothing here decides how it looks. It is only placed: dead
-    -- centre of the sheet, at most half of it either way, aspect kept.
+    -- Placed dead centre of the sheet, at most half of it either way, aspect
+    -- kept. A logo sent as a data URL arrives already grey and faded (older
+    -- portals did that in the browser) and is placed as it is. One sent as a
+    -- URL is the crest as uploaded (logo_fade): it is drawn at 12% opacity,
+    -- light enough that the questions over it stay readable.
     local logo = data.logo
     if type(logo) == "string" and logo ~= "" then
+        local picture = "\\includegraphics[width=0.5\\paperwidth,height=0.5\\paperheight,keepaspectratio]{" .. logo .. "}"
+        if data.logo_fade then
+            picture = "\\tikz\\node[inner sep=0pt,opacity=0.12]{" .. picture .. "};"
+        end
         tex.print("\\ifdefined\\AtPageCenter")
         tex.print("\\IfFileExists{" .. logo .. "}{%")
         tex.print("\\AddToShipoutPictureBG{\\AtPageCenter{%")
-        tex.print("\\makebox(0,0){\\includegraphics[width=0.5\\paperwidth,height=0.5\\paperheight,keepaspectratio]{" .. logo .. "}}%")
+        tex.print("\\makebox(0,0){" .. picture .. "}%")
         tex.print("}}}{}")
         tex.print("\\fi")
     end
@@ -730,7 +736,7 @@ def get_question_latex_template() -> str:
     -- the first LaTeX pass and right on the second, which is why this service
     -- has always compiled every paper twice.
     -- The sizes of the heading, in points, as the institution's own papers
-    -- print them: the code at 18, everything else on these two lines at 12.
+    -- print them: the code at 16, everything else on these two lines at 12.
     -- \fontsize takes the size and the baseline to go with it and needs
     -- \selectfont to take effect; each one is inside a box or a group, so it
     -- ends where that does.
@@ -763,7 +769,7 @@ def get_question_latex_template() -> str:
     -- carried the block, and a request that says nothing must still get it.
     local show_name_reg = (data.show_name_reg ~= false)
 
-    local code_box = "\\fontsize{18}{22}\\selectfont\\bfseries " .. data.qp_code
+    local code_box = "\\fontsize{16}{20}\\selectfont\\bfseries " .. data.qp_code
     local namereg_box = "\\begin{minipage}[t]{6.5cm}"
         .. "\\setlength{\\parindent}{0pt}"
         .. "\\fontsize{12}{14}\\selectfont\\bfseries"

@@ -172,6 +172,12 @@ async def compile_question_paper(question_data: Dict[str, Any]) -> bytes:
         # template then prints no watermark at all.
         processed_data['logo'] = await _prepare_logo(
             question_data.get('logo'), photo_dir, qp_code)
+        # A data URL comes already faded by the portal. A URL or a path is the
+        # crest as it is on disk - the portal now sends the address rather
+        # than the picture - so the template fades it when it places it.
+        sent = question_data.get('logo')
+        processed_data['logo_fade'] = bool(processed_data['logo']) and not (
+            isinstance(sent, str) and sent.strip().startswith('data:'))
         for part in processed_data.get('qp_parts', []):
             for i, content in enumerate(part.get('content', [])):
                 processed_content = await extract_and_download_urls(content, photo_dir)
