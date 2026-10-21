@@ -31,7 +31,7 @@ def get_question_latex_template() -> str:
 % print at all - the code would come out clipped or missing on exactly the
 % pages it is there for. At 1.7cm it starts 5.6mm down, which every printer
 % manages.
-\usepackage[a4paper,left=1.7cm,right=1.7cm,top=1.7cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
+\usepackage[a4paper,left=1.7cm,right=1.7cm,top=2.2cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
 \usepackage{zref-totpages}
 \usepackage{array}
 \usepackage{fontspec}
@@ -774,7 +774,7 @@ def get_question_latex_template() -> str:
         .. "\\setlength{\\parindent}{0pt}"
         .. "\\fontsize{12}{14}\\selectfont\\bfseries"
         .. "\\makebox[2cm][l]{Name}\\dotfill\\par"
-        .. "\\vspace{4pt}"
+        .. "\\vspace{8pt}"
         .. "\\makebox[2cm][l]{Reg. No}\\dotfill\\par"
         .. "\\end{minipage}"
     if not show_name_reg then namereg_box = "" end
@@ -795,8 +795,12 @@ def get_question_latex_template() -> str:
     -- printed paper they had been 23, 31 and 24: close enough to look
     -- accidental rather than chosen, and the widest of them left Time and Max
     -- marks floating between the title above and the questions below.
-    tex.print("\\vspace{1pt}")
-    tex.print("\\begin{center}")
+    -- The gaps of the heading, set exactly (the center environment added
+    -- its own \topsep above and below, so none of them could be chosen):
+    --   top row -> college name 18pt, college name -> examination 10pt,
+    --   examination -> course line 10pt, course line -> Time / Max marks 8pt.
+    tex.print("\\par\\vspace{18pt}")
+    tex.print("{\\centering\\noindent")
 
     -- The text width less 0.75cm either side (16.1cm on A4), centred. It was
     -- 5in (12.7cm) inside a 17.6cm measure: 2.4cm left empty either side,
@@ -818,7 +822,8 @@ def get_question_latex_template() -> str:
         tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
         print_multiline(institution)
         tex.print("\\par}")
-        tex.print("\\vspace{3pt}")
+        -- College name -> examination: 10pt.
+        tex.print("\\vspace{10pt}")
     end
 
     -- The heading is two things of different size: the EXAMINATION (14pt) and
@@ -866,16 +871,16 @@ def get_question_latex_template() -> str:
     -- each other (17pt) - so it read as a third line of the title rather than
     -- as the paper being examined.
     if nameRest and string.find(nameRest, "%S") then
-        tex.print("\\vspace{5pt}")
+        -- Examination -> course line: 10pt.
+        tex.print("\\vspace{10pt}")
         tex.print("{\\fontsize{12}{14}\\selectfont")
         print_multiline(nameRest)
         tex.print("\\par}")
     end
-    tex.print("\\end{minipage} \\\\")
+    tex.print("\\end{minipage}\\par}")
 
-    -- Was 0.3cm (8.5pt), which made this the widest gap on the page.
-    tex.print("\\vspace{1.5pt}")
-    tex.print("\\end{center}")
+    -- Course line -> Time / Max marks: 8pt.
+    tex.print("\\vspace{8pt}")
 
     -- paper_is_rtl is read once, above the heading.
 
@@ -884,10 +889,12 @@ def get_question_latex_template() -> str:
     -- finish at the left. Each label is still set left to right inside its own
     -- end - they are Latin words - which is what swapping the two sides does
     -- and what the portal's sample shows.
+    -- \noindent: the heading above is no longer a center environment, which
+    -- is what used to stop this line taking the paragraph indent.
     if paper_is_rtl then
-        tex.print("Max marks : " .. data.max_marks .. " \\hfill " .. "Time : " .. data.time)
+        tex.print("\\noindent Max marks : " .. data.max_marks .. " \\hfill " .. "Time : " .. data.time)
     else
-        tex.print("Time : " .. data.time .. " \\hfill " .. "Max marks : " .. data.max_marks)
+        tex.print("\\noindent Time : " .. data.time .. " \\hfill " .. "Max marks : " .. data.max_marks)
     end
 
     -- The paper's own instruction - "Answer all questions in the answer
