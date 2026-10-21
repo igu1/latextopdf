@@ -31,7 +31,7 @@ def get_question_latex_template() -> str:
 % print at all - the code would come out clipped or missing on exactly the
 % pages it is there for. At 1.7cm it starts 5.6mm down, which every printer
 % manages.
-\usepackage[a4paper,left=1.7cm,right=1.7cm,top=2.2cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
+\usepackage[a4paper,left=1.7cm,right=1.7cm,top=2.2cm,bottom=2cm,headheight=15pt,headsep=10pt]{geometry}
 \usepackage{zref-totpages}
 \usepackage{array}
 \usepackage{fontspec}
