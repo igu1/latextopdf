@@ -456,7 +456,7 @@ def get_question_latex_template() -> str:
   % whole, and an invigilator collecting them can see at a glance that a page
   % is missing. \ztotpages is 0 on the first LaTeX pass and right on the
   % second, which is the pass that produces the PDF.
-  \normalfont\hfil\thepage/\ztotpages\hfil
+  \normalfont\fontsize{11}{13}\selectfont\hfil\thepage/\ztotpages\hfil
   \llap{\ifnum\value{page}<\ztotpages\bfseries Turn over\fi}%
 }
 
@@ -469,7 +469,7 @@ def get_question_latex_template() -> str:
   % the Name and Reg. No beside it; on the pages after it the code is only a
   % label for the sheet, and the right-hand corner is where a reader thumbing
   % a stack of papers looks for one.
-  \def\@oddhead{\normalfont\fontsize{12}{14}\selectfont\bfseries\hfil\qpRunningCode}%
+  \def\@oddhead{\normalfont\fontsize{11}{13}\selectfont\bfseries\hfil\qpRunningCode}%
   \def\@evenhead{\@oddhead}%
   \def\@oddfoot{\qpPageFoot}%
   \let\@evenfoot\@oddfoot
@@ -769,16 +769,16 @@ def get_question_latex_template() -> str:
     -- carried the block, and a request that says nothing must still get it.
     local show_name_reg = (data.show_name_reg ~= false)
 
-    local code_box = "\\fontsize{16}{20}\\selectfont\\bfseries " .. data.qp_code
+    local code_box = "\\fontsize{14}{17}\\selectfont\\bfseries " .. data.qp_code
     local namereg_box = "\\begin{minipage}[t]{6.5cm}"
         .. "\\setlength{\\parindent}{0pt}"
-        .. "\\fontsize{12}{14}\\selectfont\\bfseries"
+        .. "\\fontsize{11}{14}\\selectfont\\bfseries"
         .. "\\makebox[2cm][l]{Name}\\dotfill\\par"
         .. "\\vspace{8pt}"
         .. "\\makebox[2cm][l]{Reg. No}\\dotfill\\par"
         .. "\\end{minipage}"
     if not show_name_reg then namereg_box = "" end
-    local pages_box = "{\\fontsize{12}{14}\\selectfont\\bfseries (Pages : \\ztotpages)}"
+    local pages_box = "{\\fontsize{11}{14}\\selectfont\\bfseries (Pages : \\ztotpages)}"
 
     -- This line does NOT turn round on a right-to-left paper. The code keeps
     -- the left margin and the Name and Reg. No the right one, whichever way
@@ -797,9 +797,11 @@ def get_question_latex_template() -> str:
     -- marks floating between the title above and the questions below.
     -- The gaps of the heading, set exactly (the center environment added
     -- its own \topsep above and below, so none of them could be chosen):
-    --   top row -> college name 18pt, college name -> examination 10pt,
-    --   examination -> course line 10pt, course line -> Time / Max marks 8pt.
-    tex.print("\\par\\vspace{18pt}")
+    --   top row -> college name 16pt, college name -> examination 8pt,
+    --   examination -> course line 6pt (the course belongs to its title),
+    --   course line -> Time / Max marks 10pt, Time -> first section 12pt.
+    -- Sizes on the 12pt body: college 14 bold, examination 13 bold, course 12.
+    tex.print("\\par\\vspace{16pt}")
     tex.print("{\\centering\\noindent")
 
     -- The text width less 0.75cm either side (16.1cm on A4), centred. It was
@@ -819,11 +821,11 @@ def get_question_latex_template() -> str:
     -- least closely, which is why it is not the largest.
     local institution = data.institution
     if type(institution) == "string" and institution ~= "" then
-        tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
+        tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
         print_multiline(institution)
         tex.print("\\par}")
-        -- College name -> examination: 10pt.
-        tex.print("\\vspace{10pt}")
+        -- College name -> examination: 8pt.
+        tex.print("\\vspace{8pt}")
     end
 
     -- The heading is two things of different size: the EXAMINATION (14pt) and
@@ -859,7 +861,7 @@ def get_question_latex_template() -> str:
         nameRest = string.rep("\\", #nameLead % 2) .. string.sub(nameTail, #nameLead + 1)
     end
 
-    tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
+    tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
     print_multiline(nameHead)
     tex.print("\\par}")
 
@@ -871,16 +873,16 @@ def get_question_latex_template() -> str:
     -- each other (17pt) - so it read as a third line of the title rather than
     -- as the paper being examined.
     if nameRest and string.find(nameRest, "%S") then
-        -- Examination -> course line: 10pt.
-        tex.print("\\vspace{10pt}")
+        -- Examination -> course line: 6pt.
+        tex.print("\\vspace{6pt}")
         tex.print("{\\fontsize{12}{14}\\selectfont")
         print_multiline(nameRest)
         tex.print("\\par}")
     end
     tex.print("\\end{minipage}\\par}")
 
-    -- Course line -> Time / Max marks: 8pt.
-    tex.print("\\vspace{8pt}")
+    -- Course line -> Time / Max marks: 10pt.
+    tex.print("\\vspace{10pt}")
 
     -- paper_is_rtl is read once, above the heading.
 
@@ -918,8 +920,8 @@ def get_question_latex_template() -> str:
     end
 
     -- A little more air before the paper proper than between the heading's
-    -- own blocks: this is where the reading starts.
-    tex.print("\\vspace{4pt}")
+    -- own blocks: this is where the reading starts. 12pt.
+    tex.print("\\vspace{12pt}")
 
     -- No list round the parts.
     --
@@ -935,8 +937,14 @@ def get_question_latex_template() -> str:
     -- content as its own \begin{enumerate} with the labels and numbering the
     -- paper's layout asks for.
     for i, row in ipairs(data.qp_parts) do
-        tex.print("\\begin{center}")
-        tex.print("\\textbf{" .. row.part_name .. "} \\\\")
+        -- The gaps of a section, set exactly (center and flushright added
+        -- their own \topsep, so they could not be chosen): 14pt from the
+        -- section before, 4pt from the heading to its instruction, and the
+        -- question list's own top space (about 9pt) plus 2pt under that.
+        -- The first section follows the heading's 12pt instead.
+        tex.print("\\par")
+        if i > 1 then tex.print("\\vspace{14pt}") end
+        tex.print("{\\centering\\noindent\\bfseries " .. row.part_name .. "\\par}")
         -- Plain, in the paper's own face and size. It was typewriter, which
         -- looked like a system message and was wider than it needed to be on
         -- a measure the questions themselves have to share; italic read as an
@@ -955,9 +963,10 @@ def get_question_latex_template() -> str:
         -- line here and nothing at the end of the section.
         if type(row.part_description) == "string"
             and row.part_description:match("%S") then
-            tex.print("{" .. row.part_description .. "} \\\\")
+            tex.print("\\vspace{4pt}")
+            tex.print("{\\centering\\noindent " .. row.part_description .. "\\par}")
         end
-        tex.print("\\end{center}")
+        tex.print("\\vspace{2pt}")
         for j, part in ipairs(row.content) do
             -- Paper-level RTL (the portal's checkbox): typeset the whole
             -- question part right-to-left. Content the caller already wrapped
@@ -998,9 +1007,7 @@ def get_question_latex_template() -> str:
         -- as an empty right-aligned line, which is a blank line of its own
         -- between one section and the next.
         if type(row.footer) == "string" and row.footer:match("%S") then
-            tex.print("\\begin{flushright}")
-            tex.print("\\texttt{\\textbf{" .. row.footer .. "}} \\\\")
-            tex.print("\\end{flushright}")
+            tex.print("\\par{\\raggedleft\\noindent\\bfseries " .. row.footer .. "\\par}")
         end
 
     end
