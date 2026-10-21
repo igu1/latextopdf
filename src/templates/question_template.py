@@ -800,7 +800,7 @@ def get_question_latex_template() -> str:
     --   top row -> college name 16pt, college name -> examination 8pt,
     --   examination -> course line 6pt (the course belongs to its title),
     --   course line -> Time / Max marks 10pt, Time -> first section 12pt.
-    -- Sizes on the 12pt body: college 14 bold, examination 13 bold, course 12.
+    -- Sizes on the 12pt body: college 13 bold, examination 14 bold, course 12.
     tex.print("\\par\\vspace{16pt}")
     tex.print("{\\centering\\noindent")
 
@@ -821,7 +821,7 @@ def get_question_latex_template() -> str:
     -- least closely, which is why it is not the largest.
     local institution = data.institution
     if type(institution) == "string" and institution ~= "" then
-        tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
+        tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
         print_multiline(institution)
         tex.print("\\par}")
         -- College name -> examination: 8pt.
@@ -861,7 +861,7 @@ def get_question_latex_template() -> str:
         nameRest = string.rep("\\", #nameLead % 2) .. string.sub(nameTail, #nameLead + 1)
     end
 
-    tex.print("{\\fontsize{13}{16}\\selectfont\\bfseries")
+    tex.print("{\\fontsize{14}{17}\\selectfont\\bfseries")
     print_multiline(nameHead)
     tex.print("\\par}")
 
