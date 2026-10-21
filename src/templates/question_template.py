@@ -31,7 +31,7 @@ def get_question_latex_template() -> str:
 % print at all - the code would come out clipped or missing on exactly the
 % pages it is there for. At 1.7cm it starts 5.6mm down, which every printer
 % manages.
-\usepackage[a4paper,left=2cm,right=2cm,top=1.7cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
+\usepackage[a4paper,left=1.7cm,right=1.7cm,top=1.7cm,bottom=1.5cm,headheight=15pt,headsep=10pt]{geometry}
 \usepackage{zref-totpages}
 \usepackage{array}
 \usepackage{fontspec}
@@ -798,7 +798,11 @@ def get_question_latex_template() -> str:
     tex.print("\\vspace{1pt}")
     tex.print("\\begin{center}")
 
-    tex.print("\\begin{minipage}{5in}")
+    -- The text width less 0.75cm either side (16.1cm on A4), centred. It was
+    -- 5in (12.7cm) inside a 17.6cm measure: 2.4cm left empty either side,
+    -- and an examination line that fits the page broke onto a second line.
+    -- A little air is kept so the heading still stands apart from the edges.
+    tex.print("\\begin{minipage}{\\dimexpr\\linewidth-1.5cm\\relax}")
     tex.print("\\centering")
 
     -- The institution's name, above the examination, when the layout says the
